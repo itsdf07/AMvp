@@ -1,14 +1,23 @@
 package com.itsdf07.mvp;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.util.Log;
 
-import android.os.Bundle;
+import com.itsdf07.base.mvp.BaseMvpActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseMvpActivity<MainPresenter> implements MainContracts.IMainView {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public MainPresenter initPresenter() {
+        return new MainPresenter(this);
+    }
+
+    @Override
+    public int getLayoutId() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    public void initView() {
+        Log.d(TAG, "初始化MainActivity...");
     }
 }
