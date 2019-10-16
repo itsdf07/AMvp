@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.itsdf07.base.BaseActivity;
+import com.itsdf07.base.MvpConfig;
 import com.itsdf07.base.mvp.presenter.IBaseMvpPresenter;
 import com.itsdf07.base.mvp.view.IBaseMvpView;
 
@@ -16,7 +17,6 @@ import com.itsdf07.base.mvp.view.IBaseMvpView;
  * @Date 2019/10/16
  */
 public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseActivity implements IBaseMvpView<Activity> {
-    public String TAG = this.getClass().getSimpleName();
     public P presenter;
 
     @Override
@@ -27,11 +27,14 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
 
     @Override
     protected void onDestroy() {
+        if (MvpConfig.isShowMvpLog) {
+            Log.i(TAG, "onDestroy->...");
+        }
         super.onDestroy();
         /**
          * 在生命周期结束时，将presenter与view之间的联系断开，防止出现内存泄露
          */
-        if (presenter != null) {
+        if (null != presenter) {
             presenter.detachView();
         }
     }
@@ -40,11 +43,16 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
 
     @Override
     public void showLoading() {
-
+        if (MvpConfig.isShowMvpLog) {
+            Log.i(TAG, "showLoading->...");
+        }
     }
 
     @Override
     public void showLoading(String content) {
+        if (MvpConfig.isShowMvpLog) {
+            Log.i(TAG, "showLoading->content:" + content);
+        }
         if (null == content) {
             Log.w(TAG, "showLoading 的显示内容为null，将为您显示默认内容...");
             showLoading();
@@ -54,11 +62,16 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
 
     @Override
     public void hideLoading() {
-
+        if (MvpConfig.isShowMvpLog) {
+            Log.i(TAG, "hideLoading->...");
+        }
     }
 
     @Override
     public void showToast(String content) {
+        if (MvpConfig.isShowMvpLog) {
+            Log.i(TAG, "showToast->content:" + content);
+        }
         if (null == content) {
             Log.w(TAG, "showToast 的显示内容为null，将主动为您置为\"\"");
             content = "";
