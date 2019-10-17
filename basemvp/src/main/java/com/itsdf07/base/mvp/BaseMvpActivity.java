@@ -23,6 +23,7 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         presenter = initPresenter();
+        afterPresenter();
     }
 
     @Override
@@ -40,6 +41,8 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
     }
 
     public abstract P initPresenter();
+
+    public abstract void afterPresenter();
 
     @Override
     public void showLoading() {
