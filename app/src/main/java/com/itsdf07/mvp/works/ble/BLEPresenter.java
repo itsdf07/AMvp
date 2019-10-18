@@ -1,9 +1,8 @@
 package com.itsdf07.mvp.works.ble;
 
-import android.os.Environment;
-import android.text.TextUtils;
 import android.util.Log;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.base.mvp.presenter.BaseMvpPresenter;
 import com.itsdf07.bluetooth.ble.bean.BLEChannelSetting;
 import com.itsdf07.bluetooth.ble.bean.BLEPublicSetting;
@@ -13,13 +12,8 @@ import com.itsdf07.bluetooth.ble.client.core.OKBLEDeviceListener;
 import com.itsdf07.bluetooth.ble.client.core.OKBLEOperation;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @Description:
@@ -106,12 +100,14 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
     }
 
     @Override
-    public HashMap<Integer, Object> readDatas() {
-        return null;
+    public void readDatas() {
+        handshakeNum = 1;
+        sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
     }
 
     @Override
     public void writeDatas() {
+        handshakeNum = 1;
         sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
     }
 
@@ -128,24 +124,24 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
 
     @Override
     public void onConnected(String deviceTAG) {
-        Log.e(TAG, "onConnected->deviceTAG:" + deviceTAG);
+        ALog.eTag(TAG, "deviceTAG:%s", deviceTAG);
         getView().updataBLEConnectStatus("已连接");
         final OKBLEOperation.OperationType[] operationType = new OKBLEOperation.OperationType[1];
 //        Toast.makeText(BLEActivity.this, "通知打开中...", Toast.LENGTH_SHORT).show();
         okbleDevice.addNotifyOrIndicateOperation(UUIDNOTIFY, true, new OKBLEOperation.NotifyOrIndicateOperationListener() {
             @Override
             public void onNotifyOrIndicateComplete() {
-                Log.e(TAG, "onNotifyOrIndicateComplete->通知已打开");
+                ALog.eTag(TAG, "通知已打开");
             }
 
             @Override
             public void onFail(int code, final String errMsg) {
-                Log.e(TAG, "onFail->code:" + code + ",errMsg:" + errMsg);
+                ALog.eTag(TAG, "code:%s,errMsg:%s", code, errMsg);
             }
 
             @Override
             public void onExecuteSuccess(OKBLEOperation.OperationType type) {
-                Log.e(TAG, "onExecuteSuccess->type:" + type.name());
+                ALog.eTag(TAG, "type:%s", type.name());
                 operationType[0] = type;
             }
         });
@@ -153,13 +149,13 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
 
     @Override
     public void onDisconnected(String deviceTAG) {
-        Log.e(TAG, "onDisconnected->deviceTAG:" + deviceTAG);
+        ALog.eTag(TAG, "deviceTAG:%s", deviceTAG);
         disConnectBLE();
     }
 
     @Override
     public void onReadBattery(String deviceTAG, int battery) {
-        Log.e(TAG, "onReadBattery->deviceTAG:" + deviceTAG + ",battery:" + battery);
+        ALog.eTag(TAG, "deviceTAG:%s,battery:%s", deviceTAG, battery);
     }
 
     private int count = 0;
@@ -167,7 +163,7 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
 
     @Override
     public void onReceivedValue(String deviceTAG, String uuid, final byte[] value) {
-        Log.e(TAG, "onReceivedValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",value:" + Arrays.toString(value));
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,value:%", deviceTAG, uuid, Arrays.toString(value));
         if (isDataWriting) {
             switch (handshakeNum) {//当前为第一次握手时下位机响应回来的信息:06
                 case 1://
@@ -198,7 +194,7 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
                     if (value[0] == (byte) 0x06) {
                         count = 0;
                         //TODO 开始发送第一个数据包:设置数据
-                        Log.e(TAG, "onReceivedValue->正在发送公共协议数据");
+                        ALog.eTag(TAG, "正在发送公共协议数据");
                         datasIndex2Write = 0;
                         sendData(UUIDWRITE, getBLEPublicDataPackage(getBLEPublicSetting()));
                     }
@@ -214,8 +210,59 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
                         } else {
                             ++datasIndex2Write;
                             BLEChannelSetting bleChannelSetting = (BLEChannelSetting) bleChannelSettingHashMap.get(datasIndex2Write);
-                            Log.e(TAG, "onReceivedValue->正在发送信道" + bleChannelSetting.getChannelNum() + "数据了");
+                            ALog.eTag(TAG, "正在发送信道%s数据了", bleChannelSetting.getChannelNum());
                             sendData(UUIDWRITE, getChannelDataPackage(bleChannelSetting));
+                        }
+                    }
+                    break;
+            }
+        } else {
+            switch (handshakeNum) {//当前为第一次握手时下位机响应回来的信息:06
+                case 1://
+                    if (value[0] == (byte) 0x06) {
+                        count++;
+                        //TODO 发送 (byte) 0x02
+                        sendData(UUIDWRITE, (byte) 0x02);
+                    }
+                    break;
+                case 2://当前为第二次握手时下位机响应回来的信息:50 33 31 30 37 00 00 00
+                    if (value.length == BLEMhzUtils.acceptHandshakeProtocol().length) {
+                        count++;
+                        boolean isMatch = true;
+                        for (int i = 0; i < value.length; i++) {
+                            if (value[i] != BLEMhzUtils.acceptHandshakeProtocol()[i]) {
+                                isMatch = false;
+                                break;
+                            }
+                        }
+                        if (isMatch) {
+                            // TODO 发送 (byte) 0x06
+                            sendData(UUIDWRITE, (byte) 0x06);
+                        }
+
+                    }
+                    break;
+                case 3://当前为第三次握手时下位机响应回来的信息:06(本次为握手最后一步，往下即可开始写入数据了)
+                    if (value[0] == (byte) 0x06) {
+                        count = 0;
+                        //TODO 开始发送第一个数据包:设置数据
+                        ALog.eTag(TAG, "正在读取公共协议数据");
+                        datasIndex2Write = 0;
+//                        sendData(UUIDWRITE, getBLEPublicDataPackage(getBLEPublicSetting()));
+                    }
+                    break;
+                default:
+                    if (value[0] == (byte) 0x06) {
+                        //TODO 开始发送第N+1个数据包:设置数据
+                        if (datasIndex2Write >= 32) {
+                            sendData(UUIDWRITE, (byte) 0x45);
+                            datasIndex2Write = 0;
+                            isDataWriting = false;
+                        } else {
+                            ++datasIndex2Write;
+//                            BLEChannelSetting bleChannelSetting = (BLEChannelSetting) bleChannelSettingHashMap.get(datasIndex2Write);
+//                            Log.e(TAG, "onReceivedValue->正在发送信道" + bleChannelSetting.getChannelNum() + "数据了");
+//                            sendData(UUIDWRITE, getChannelDataPackage(bleChannelSetting));
                         }
                     }
                     break;
@@ -225,17 +272,17 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
 
     @Override
     public void onWriteValue(String deviceTAG, String uuid, byte[] value, boolean success) {
-        Log.e(TAG, "onWriteValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",value:" + Arrays.toString(value));
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,value:%s,success:%s", deviceTAG, uuid, Arrays.toString(value), success);
     }
 
     @Override
     public void onReadValue(String deviceTAG, String uuid, byte[] value, boolean success) {
-        Log.e(TAG, "onReadValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",success:" + success + ",value:" + Arrays.toString(value));
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,value:%s,success:%s", deviceTAG, uuid, Arrays.toString(value), success);
     }
 
     @Override
     public void onNotifyOrIndicateComplete(String deviceTAG, String uuid, boolean enable, boolean success) {
-        Log.e(TAG, "onNotifyOrIndicateComplete->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",success:" + success + ",enable:" + enable);
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,enable:%s,success:%s", deviceTAG, uuid, enable, success);
     }
 
 
@@ -249,18 +296,18 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
         okbleDevice.addWriteOperation(uuid, data, new OKBLEOperation.WriteOperationListener() {
             @Override
             public void onWriteValue(byte[] value) {
-                Log.e(TAG, "onWriteValue->value:" + Arrays.toString(value));
+                ALog.eTag(TAG, "value:%s" ,Arrays.toString(value));
             }
 
             @Override
             public void onFail(int code, String errMsg) {
-                Log.e(TAG, "onFail->code:" + code + ",errMsg:" + errMsg);
+                ALog.eTag(TAG, "code:%s,errMgs:%s" ,code,errMsg);
 
             }
 
             @Override
             public void onExecuteSuccess(OKBLEOperation.OperationType type) {
-                Log.e(TAG, "onExecuteSuccess->type:" + type.name());
+                ALog.eTag(TAG, "type:%s", type.name());
             }
         });
     }

@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.base.mvp.BaseMvpActivity;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
 import com.itsdf07.mvp.R;
@@ -186,11 +187,16 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
 
     @Override
     public void onClick(View v) {
-
+        switch (v.getId()){
+            case R.id.btn_writeHz:
+                presenter.writeDatas();
+                break;
+        }
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        ALog.eTag(TAG, "position:%s,id:%s", position, id);
         switch (parent.getId()) {
             case R.id.sp_gps:
                 presenter.getBLEPublicSetting().setGps(position);
@@ -252,11 +258,12 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
+        ALog.eTag(TAG,"...");
     }
 
     @Override
     public void updataBLEConnectStatus(final String content) {
+        ALog.eTag(TAG,"content:%s",content);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

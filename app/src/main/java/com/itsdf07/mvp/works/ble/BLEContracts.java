@@ -32,10 +32,8 @@ public interface BLEContracts {
 
         /**
          * 读取设备数据
-         *
-         * @return 包含公共协议BLEPublicSetting以及BLEChannelSetting
          */
-        HashMap<Integer, Object> readDatas();
+        void readDatas();
 
         /**
          * 设备写入数据

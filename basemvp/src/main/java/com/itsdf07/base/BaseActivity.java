@@ -7,6 +7,8 @@ import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.itsdf07.alog.ALog;
+
 /**
  * @Description: 基础视图对UI的初始化封装
  * @Author itsdf07
@@ -19,12 +21,12 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (this.getLayoutId() > 0) {
-            if (MvpConfig.isShowMvpLog){
-                Log.i(TAG, "onCreate->LayoutId:" + this.getLayoutId());
+            if (MvpConfig.isShowMvpLog) {
+                ALog.iTag(TAG, "LayoutId:%s", this.getLayoutId());
             }
             setContentView(this.getLayoutId());
         } else {
-            Log.w(TAG, "请在getLayoutId中设置您的UI布局");
+            ALog.wTag(TAG, "请在getLayoutId中设置您的UI布局");
         }
         initView();
     }

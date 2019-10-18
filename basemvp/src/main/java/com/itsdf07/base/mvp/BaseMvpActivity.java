@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.base.BaseActivity;
 import com.itsdf07.base.MvpConfig;
 import com.itsdf07.base.mvp.presenter.IBaseMvpPresenter;
@@ -29,7 +30,7 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
     @Override
     protected void onDestroy() {
         if (MvpConfig.isShowMvpLog) {
-            Log.i(TAG, "onDestroy->...");
+            ALog.iTag(TAG, "...");
         }
         super.onDestroy();
         /**
@@ -47,17 +48,17 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
     @Override
     public void showLoading() {
         if (MvpConfig.isShowMvpLog) {
-            Log.i(TAG, "showLoading->...");
+            ALog.iTag(TAG, "...");
         }
     }
 
     @Override
     public void showLoading(String content) {
         if (MvpConfig.isShowMvpLog) {
-            Log.i(TAG, "showLoading->content:" + content);
+            ALog.iTag(TAG, "content:%s", content);
         }
         if (null == content) {
-            Log.w(TAG, "showLoading 的显示内容为null，将为您显示默认内容...");
+            ALog.wTag(TAG, "showLoading 的显示内容为null，将为您显示默认内容...");
             showLoading();
             return;
         }
@@ -66,17 +67,17 @@ public abstract class BaseMvpActivity<P extends IBaseMvpPresenter> extends BaseA
     @Override
     public void hideLoading() {
         if (MvpConfig.isShowMvpLog) {
-            Log.i(TAG, "hideLoading->...");
+            ALog.iTag(TAG, "...");
         }
     }
 
     @Override
     public void showToast(String content) {
         if (MvpConfig.isShowMvpLog) {
-            Log.i(TAG, "showToast->content:" + content);
+            ALog.iTag(TAG, "content:%s", content);
         }
         if (null == content) {
-            Log.w(TAG, "showToast 的显示内容为null，将主动为您置为\"\"");
+            ALog.wTag(TAG, "showToast 的显示内容为null，将主动为您置为\"\"");
             content = "";
         }
         Toast.makeText(this, content, Toast.LENGTH_SHORT).show();

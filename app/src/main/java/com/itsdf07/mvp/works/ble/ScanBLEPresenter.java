@@ -3,6 +3,7 @@ package com.itsdf07.mvp.works.ble;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.base.mvp.presenter.BaseMvpPresenter;
 import com.itsdf07.bluetooth.LinkedHashMap;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
@@ -35,11 +36,13 @@ public class ScanBLEPresenter extends BaseMvpPresenter<ScanBLEContracts.IScanBLE
 
     @Override
     public void startScan() {
+        ALog.dTag(TAG,"开始扫描");
         scanManager.startScan();
     }
 
     @Override
     public void stopScan() {
+        ALog.dTag(TAG,"停止扫描");
         scanManager.stopScan();
     }
 
@@ -62,7 +65,7 @@ public class ScanBLEPresenter extends BaseMvpPresenter<ScanBLEContracts.IScanBLE
 
         @Override
         public void onFailed(int code) {
-            Log.e(TAG, "onFailed->code:" + code);
+            ALog.eTag(TAG, "code:%s" ,code);
             switch (code) {
                 case DeviceScanCallBack.SCAN_FAILED_BLE_NOT_SUPPORT:
                     Toast.makeText(getView().getSelfActivity(), "该设备不支持BLE", Toast.LENGTH_SHORT).show();
@@ -85,7 +88,7 @@ public class ScanBLEPresenter extends BaseMvpPresenter<ScanBLEContracts.IScanBLE
 
         @Override
         public void onStartSuccess() {
-            Log.e(TAG, "onStartSuccess->...");
+            ALog.eTag(TAG, "onStartSuccess->...");
 //            refreshLayout.finishRefresh();
         }
     };
