@@ -19,35 +19,27 @@ public class BLEChannelSetting {
     /**
      * 发射频率
      */
-    private String sendHz = "";
+    private String tx2Send = "";
 
     /**
      * 接收频率
      */
-    private String recHz = "";//462.0125
+    private String tx2Receive = "";//462.0125
     /**
-     * CTC/DCS解码
+     * 亚音频解码（CTC/DCS解码）
      */
-    private int decodeCtcDcs = 0;
+    private String ctcss2Decode = "";
     /**
-     * CTC/DCS解码
+     * 亚音频编码（CTC/DCS编码）
      */
-    private String strDecodeCtcDcs = "";
-    /**
-     * CTC/DCS编码
-     */
-    private int encodeCtcDcs = 0;
-    /**
-     * CTC/DCS编码
-     */
-    private String strEncodeCtcDcs = "";
+    private String ctcss2Encode = "";
 
     /**
      * 添加扫描
      */
-    private int scanAdd = 0;
+    private int scan = 0;
     /**
-     * 带宽
+     * [通信] 频带宽度
      */
     private int bandwidth = 0;
     /**
@@ -87,66 +79,50 @@ public class BLEChannelSetting {
         this.channelNum = channelNum;
     }
 
-    public String getSendHz() {
-        return sendHz;
+    public String getTx2Send() {
+        return tx2Send;
     }
 
-    public void setSendHz(String sendHz) {
-        if (sendHz.toUpperCase().equals("FFF.FFFF")) {
-            sendHz = "";
+    public void setTx2Send(String tx2Send) {
+        if (tx2Send.toUpperCase().equals("FFF.FFFF")) {
+            tx2Send = "";
         }
-        this.sendHz = sendHz;
+        this.tx2Send = tx2Send;
     }
 
-    public String getRecHz() {
-        return recHz;
+    public String getTx2Receive() {
+        return tx2Receive;
     }
 
-    public void setRecHz(String recHz) {
-        if (recHz.toUpperCase().equals("FFF.FFFF")) {
-            recHz = "";
+    public void setTx2Receive(String tx2Receive) {
+        if (tx2Receive.toUpperCase().equals("FFF.FFFF")) {
+            tx2Receive = "";
         }
-        this.recHz = recHz;
+        this.tx2Receive = tx2Receive;
     }
 
-    public int getDecodeCtcDcs() {
-        return decodeCtcDcs;
+    public String getCtcss2Decode() {
+        return ctcss2Decode;
     }
 
-    public void setDecodeCtcDcs(int decodeCtcDcs) {
-        this.decodeCtcDcs = decodeCtcDcs;
+    public void setCtcss2Decode(String ctcss2Decode) {
+        this.ctcss2Decode = ctcss2Decode;
     }
 
-    public String getStrDecodeCtcDcs() {
-        return strDecodeCtcDcs;
+    public String getCtcss2Encode() {
+        return ctcss2Encode;
     }
 
-    public void setStrDecodeCtcDcs(String strDecodeCtcDcs) {
-        this.strDecodeCtcDcs = strDecodeCtcDcs;
+    public void setCtcss2Encode(String ctcss2Encode) {
+        this.ctcss2Encode = ctcss2Encode;
     }
 
-    public int getEncodeCtcDcs() {
-        return encodeCtcDcs;
+    public int getScan() {
+        return scan;
     }
 
-    public void setEncodeCtcDcs(int encodeCtcDcs) {
-        this.encodeCtcDcs = encodeCtcDcs;
-    }
-
-    public String getStrEncodeCtcDcs() {
-        return strEncodeCtcDcs;
-    }
-
-    public void setStrEncodeCtcDcs(String strEncodeCtcDcs) {
-        this.strEncodeCtcDcs = strEncodeCtcDcs;
-    }
-
-    public int getScanAdd() {
-        return scanAdd;
-    }
-
-    public void setScanAdd(int scanAdd) {
-        this.scanAdd = scanAdd;
+    public void setScan(int scan) {
+        this.scan = scan;
     }
 
     public int getBandwidth() {
@@ -200,9 +176,9 @@ public class BLEChannelSetting {
     @Override
     public String toString() {
         return "信道:" + channelNum
-                + ",发射频率:" + sendHz + ",接收频率:" + recHz
-                + ",CTC/DCS解码:" + decodeCtcDcs + "-" + strDecodeCtcDcs + ",CTC/DCS编码:" + encodeCtcDcs + "-" + strEncodeCtcDcs
-                + ",是否添加扫描:" + scanAdd + ",带宽:" + bandwidth + ",发射功率:" + transmitPower + ",是否繁忙锁定:" + busyLock
+                + ",发射频率:" + tx2Send + ",接收频率:" + tx2Receive
+                + ",CTC/DCS解码:" + ctcss2Decode + ",CTC/DCS编码:" + ctcss2Encode
+                + ",是否添加扫描:" + scan + ",带宽:" + bandwidth + ",发射功率:" + transmitPower + ",是否繁忙锁定:" + busyLock
                 + ",是否扰频:" + scramble + ",是否压扩:" + companding + ",是否特殊信令:" + specialSignaling;
     }
 }

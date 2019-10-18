@@ -20,7 +20,7 @@ public interface ScanBLEContracts {
         /**
          * 刷新整个适配器内容
          */
-        public void notifyUpdata2Adapter();
+        void notifyUpdata2Adapter();
 
         /**
          * 针对列表的某一项进行刷新

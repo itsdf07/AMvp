@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".works.ble.ScanBLEActivity" />
+        <activity android:name=".works.ble.BLEActivity"/>
     </application>
 
 </manifest>

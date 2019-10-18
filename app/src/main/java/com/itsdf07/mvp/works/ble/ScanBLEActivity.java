@@ -1,8 +1,10 @@
 package com.itsdf07.mvp.works.ble;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -10,6 +12,7 @@ import android.widget.TextView;
 
 import com.itsdf07.base.mvp.BaseMvpActivity;
 import com.itsdf07.mvp.R;
+
 
 /**
  * @Description: 蓝牙BLE扫描界面
@@ -45,6 +48,22 @@ public class ScanBLEActivity extends BaseMvpActivity<ScanBLEPresenter> implement
 
         lvBLEs = $(R.id.lv_bles);
         bleAdapter = new BLEAdapter();
+        lvBLEs.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                presenter.stopScan();
+                Intent intent = new Intent(ScanBLEActivity.this, BLEActivity.class);
+                intent.putExtra(BLEPresenter.EXTRA_BLEDEVICE, presenter.getBLEs().get(position));
+                startActivity(intent);
+                return true;
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        presenter.stopScan();
     }
 
     @Override
@@ -84,7 +103,6 @@ public class ScanBLEActivity extends BaseMvpActivity<ScanBLEPresenter> implement
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.e(TAG, "position:" + position);
             ViewHolder viewholder;
             if (convertView == null) {
                 viewholder = new ViewHolder();
@@ -124,7 +142,6 @@ public class ScanBLEActivity extends BaseMvpActivity<ScanBLEPresenter> implement
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Log.e(TAG, "size:" + bleAdapter.getCount());
                 bleAdapter.notifyDataSetChanged();
             }
         });
