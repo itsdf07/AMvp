@@ -1,6 +1,8 @@
 package com.itsdf07.mvp;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -181,7 +183,35 @@ public class BLE2Activity extends AppCompatActivity implements
         btnMhzRead.setOnClickListener(this);
 
         etCtcss2Accept = findViewById(R.id.et_rx);
+        etCtcss2Accept.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTx2Receive(s.toString());
+            }
+        });
         etCtcss2Send = findViewById(R.id.et_tx);
+        etCtcss2Send.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTx2Send(s.toString());
+            }
+        });
 
 
         /**
@@ -293,6 +323,7 @@ public class BLE2Activity extends AppCompatActivity implements
         switch (v.getId()) {
             case R.id.btn_writeHz:
                 btnMhzWrite.setEnabled(false);
+                btnMhzRead.setEnabled(false);
                 Toast.makeText(this, "正在写数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = true;
                 handshakeNum = 1;
@@ -300,6 +331,9 @@ public class BLE2Activity extends AppCompatActivity implements
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
             case R.id.btn_readHz:
+                btnMhzWrite.setEnabled(false);
+                btnMhzRead.setEnabled(false);
+                Toast.makeText(this, "正在读取数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = false;
                 handshakeNum = 1;
                 ALog.eTag(TAG, "isDataWriting::%s,handshakeNum::%s,value::%s", isDataWriting, handshakeNum, Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
@@ -398,7 +432,7 @@ public class BLE2Activity extends AppCompatActivity implements
                         }
                     }
                     if (isMatch) {
-                        Log.e(TAG, "onReceivedValue->握手成功....");
+                        ALog.e(TAG, "onReceivedValue->握手成功....");
                         // TODO 发送 (byte) 0x06
                         sendData(UUIDWRITE, (byte) 0x06);
                     }
@@ -408,12 +442,11 @@ public class BLE2Activity extends AppCompatActivity implements
                 if (value[0] == (byte) 0x06) {
                     handshakeNum = 0;
                     //TODO 开始发送第一个数据包:设置数据
-                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
+                    ALog.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
                     sendData(UUIDWRITE, getBLEPublicDataPackage(blePublicSetting));
                 }
             } else {
                 if (value[0] == (byte) 0x06) {
-
                     //TODO 开始发送第N+1个数据包:设置数据
                     Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送第" + packageDataIndex + "个信道数据了");
                     if (packageDataIndex >= 32) {
@@ -424,6 +457,7 @@ public class BLE2Activity extends AppCompatActivity implements
                             @Override
                             public void run() {
                                 btnMhzWrite.setEnabled(true);
+                                btnMhzRead.setEnabled(true);
                             }
                         });
                     } else {
@@ -450,6 +484,7 @@ public class BLE2Activity extends AppCompatActivity implements
                         }
                     }
                     if (isMatch) {
+                        ALog.e(TAG, "onReceivedValue->握手成功....");
                         // TODO 发送 (byte) 0x06
                         sendData(UUIDWRITE, (byte) 0x06);
                     }
