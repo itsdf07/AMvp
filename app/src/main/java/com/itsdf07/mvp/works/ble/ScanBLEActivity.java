@@ -11,6 +11,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.itsdf07.base.mvp.BaseMvpActivity;
+import com.itsdf07.mvp.BLE2Activity;
 import com.itsdf07.mvp.R;
 
 
@@ -52,8 +53,8 @@ public class ScanBLEActivity extends BaseMvpActivity<ScanBLEPresenter> implement
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 presenter.stopScan();
-                Intent intent = new Intent(ScanBLEActivity.this, BLEActivity.class);
-                intent.putExtra(BLEPresenter.EXTRA_BLEDEVICE, presenter.getBLEs().get(position));
+                Intent intent = new Intent(ScanBLEActivity.this, BLE2Activity.class);
+                intent.putExtra(BLE2Activity.EXTRA_BLEDEVICE, presenter.getBLEs().get(position));
                 startActivity(intent);
                 return true;
             }

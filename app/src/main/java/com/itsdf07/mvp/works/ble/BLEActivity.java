@@ -20,6 +20,9 @@ import com.itsdf07.mvp.R;
 public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLEContracts.IBLEView,
         View.OnClickListener,
         AdapterView.OnItemSelectedListener {
+
+
+    private BLEScanResult bleScanResult;
     private TextView tvConnectStatus;
     private TextView tvDeviceInfo;
     private Button btnMhzWrite;
@@ -113,16 +116,12 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
 
     @Override
     public void afterPresenter() {
-        presenter.setBLEDevice((BLEScanResult) getIntent().getParcelableExtra(BLEPresenter.EXTRA_BLEDEVICE));
-        tvDeviceInfo.setText(getString(R.string.string_public_information) + "　" +
-                presenter.getBLEDevice().getBluetoothDevice().getName() + "->" + presenter.getBLEDevice().getBluetoothDevice().getAddress());
-        presenter.connectBLE();
-    }
+      }
 
     @Override
     protected void onDestroy() {
-        presenter.disConnectBLE();
         super.onDestroy();
+        presenter.disConnectBLE();
     }
 
     @Override
@@ -132,7 +131,11 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
 
     @Override
     public void initView() {
+        bleScanResult = getIntent().getParcelableExtra(BLEPresenter.EXTRA_BLEDEVICE);
+
         tvDeviceInfo = findViewById(R.id.tv_ble_info);
+        tvDeviceInfo.setText(getString(R.string.string_public_information) + "　" +
+                presenter.getBLEDevice().getBluetoothDevice().getName() + "->" + presenter.getBLEDevice().getBluetoothDevice().getAddress());
 
         tvConnectStatus = findViewById(R.id.tv_connect_status);
         tvConnectStatus.setText("连接中...");
@@ -183,11 +186,15 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
         spScan.setOnItemSelectedListener(this);
         spBandWidth.setOnItemSelectedListener(this);
         spTransmitPower.setOnItemSelectedListener(this);
+
+
+        presenter.setBLEDevice(bleScanResult);
+
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.btn_writeHz:
                 presenter.writeDatas();
                 break;
@@ -258,12 +265,12 @@ public class BLEActivity extends BaseMvpActivity<BLEPresenter> implements BLECon
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-        ALog.eTag(TAG,"...");
+        ALog.eTag(TAG, "...");
     }
 
     @Override
     public void updataBLEConnectStatus(final String content) {
-        ALog.eTag(TAG,"content:%s",content);
+        ALog.eTag(TAG, "content:%s", content);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

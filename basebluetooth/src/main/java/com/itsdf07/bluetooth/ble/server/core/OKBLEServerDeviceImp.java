@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.util.Log;
 
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.bluetooth.ble.common.BLEOperationQueue;
 import com.itsdf07.bluetooth.ble.common.CommonUUIDUtils;
 import com.itsdf07.bluetooth.ble.common.OKBLECharacteristicModel;
@@ -152,16 +153,16 @@ public class OKBLEServerDeviceImp implements  OKBLEServerDevice{
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             super.onConnectionStateChange(device, status, newState);
-            Log.e(TAG,"---- server onConnectionStateChange status:"+status+" newState:"+newState);
+            ALog.eTag("itaso","---- server onConnectionStateChange status:"+status+" newState:"+newState);
         }
 
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
             super.onServiceAdded(status, service);
 
-            Log.e(TAG,"---- onServiceAdded---- ");
+            ALog.eTag("itaso","---- onServiceAdded---- ");
             for (BluetoothGattCharacteristic characteristic:service.getCharacteristics()){
-                Log.e(TAG,"---- characteristic:"+characteristic.getUuid().toString());
+                ALog.eTag("itaso","---- characteristic:"+characteristic.getUuid().toString());
             }
             if (bleOperationQueue.getOperationSize() > 0) {
                 OKBLEServerOperation operation= bleOperationQueue.removeFirst();

@@ -17,5 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="待开发功能" />
-
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Version:2019.10.20.02" />
 </LinearLayout>

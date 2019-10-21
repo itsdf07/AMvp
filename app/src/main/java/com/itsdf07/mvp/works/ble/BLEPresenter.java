@@ -58,10 +58,15 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
     @Override
     public void setBLEDevice(BLEScanResult device) {
         this.bleScanResult = device;
+        initBLEChannelDatas();
         okbleDevice = new OKBLEDeviceImp(getView().getSelfActivity(), bleScanResult);
         okbleDevice.addDeviceListener(this);
+        connectBLE();
 
-        //TODO 暂时在类实例时自带默认值，后续需要进行读取初始化
+    }
+
+    private void initBLEChannelDatas(){
+
         blePublicSetting = new BLEPublicSetting();
         bleChannelSettingHashMap.put(0, blePublicSetting);
         /**
@@ -101,12 +106,14 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
 
     @Override
     public void readDatas() {
+        isDataWriting = false;
         handshakeNum = 1;
         sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
     }
 
     @Override
     public void writeDatas() {
+        isDataWriting = true;
         handshakeNum = 1;
         sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
     }
@@ -132,11 +139,30 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
             @Override
             public void onNotifyOrIndicateComplete() {
                 ALog.eTag(TAG, "通知已打开");
+                getView().getSelfActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        Toast.makeText(BLEActivity.this, "通知已打开", Toast.LENGTH_SHORT).show();
+                        //addLog("onNotifyOrIndicateComplete");
+                        if (operationType[0] == OKBLEOperation.OperationType.OperationType_Enable_Indicate) {
+                            //  btn_indicate.setText("Indication enabled");
+                            //  btn_indicate.setEnabled(false);
+                        } else if (operationType[0] == OKBLEOperation.OperationType.OperationType_Enable_Notify) {
+                            // btn_notify.setText("Notification enabled");
+                            // btn_notify.setEnabled(false);
+                        }
+                    }
+                });
             }
 
             @Override
             public void onFail(int code, final String errMsg) {
                 ALog.eTag(TAG, "code:%s,errMsg:%s", code, errMsg);
+                getView().getSelfActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    }
+                });
             }
 
             @Override
@@ -158,8 +184,6 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
         ALog.eTag(TAG, "deviceTAG:%s,battery:%s", deviceTAG, battery);
     }
 
-    private int count = 0;
-    byte[] readPublie = new byte[4];
 
     @Override
     public void onReceivedValue(String deviceTAG, String uuid, final byte[] value) {
@@ -168,14 +192,14 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
             switch (handshakeNum) {//当前为第一次握手时下位机响应回来的信息:06
                 case 1://
                     if (value[0] == (byte) 0x06) {
-                        count++;
+                        handshakeNum++;
                         //TODO 发送 (byte) 0x02
                         sendData(UUIDWRITE, (byte) 0x02);
                     }
                     break;
                 case 2://当前为第二次握手时下位机响应回来的信息:50 33 31 30 37 00 00 00
                     if (value.length == BLEMhzUtils.acceptHandshakeProtocol().length) {
-                        count++;
+                        handshakeNum++;
                         boolean isMatch = true;
                         for (int i = 0; i < value.length; i++) {
                             if (value[i] != BLEMhzUtils.acceptHandshakeProtocol()[i]) {
@@ -192,7 +216,7 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
                     break;
                 case 3://当前为第三次握手时下位机响应回来的信息:06(本次为握手最后一步，往下即可开始写入数据了)
                     if (value[0] == (byte) 0x06) {
-                        count = 0;
+                        handshakeNum = 0;
                         //TODO 开始发送第一个数据包:设置数据
                         ALog.eTag(TAG, "正在发送公共协议数据");
                         datasIndex2Write = 0;
@@ -220,14 +244,14 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
             switch (handshakeNum) {//当前为第一次握手时下位机响应回来的信息:06
                 case 1://
                     if (value[0] == (byte) 0x06) {
-                        count++;
+                        handshakeNum++;
                         //TODO 发送 (byte) 0x02
                         sendData(UUIDWRITE, (byte) 0x02);
                     }
                     break;
                 case 2://当前为第二次握手时下位机响应回来的信息:50 33 31 30 37 00 00 00
                     if (value.length == BLEMhzUtils.acceptHandshakeProtocol().length) {
-                        count++;
+                        handshakeNum++;
                         boolean isMatch = true;
                         for (int i = 0; i < value.length; i++) {
                             if (value[i] != BLEMhzUtils.acceptHandshakeProtocol()[i]) {
@@ -244,7 +268,7 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
                     break;
                 case 3://当前为第三次握手时下位机响应回来的信息:06(本次为握手最后一步，往下即可开始写入数据了)
                     if (value[0] == (byte) 0x06) {
-                        count = 0;
+                        handshakeNum = 0;
                         //TODO 开始发送第一个数据包:设置数据
                         ALog.eTag(TAG, "正在读取公共协议数据");
                         datasIndex2Write = 0;
@@ -296,12 +320,12 @@ public class BLEPresenter extends BaseMvpPresenter<BLEContracts.IBLEView> implem
         okbleDevice.addWriteOperation(uuid, data, new OKBLEOperation.WriteOperationListener() {
             @Override
             public void onWriteValue(byte[] value) {
-                ALog.eTag(TAG, "value:%s" ,Arrays.toString(value));
+                ALog.eTag(TAG, "value:%s", Arrays.toString(value));
             }
 
             @Override
             public void onFail(int code, String errMsg) {
-                ALog.eTag(TAG, "code:%s,errMgs:%s" ,code,errMsg);
+                ALog.eTag(TAG, "code:%s,errMgs:%s", code, errMsg);
 
             }
 

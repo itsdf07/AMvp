@@ -13,6 +13,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.bluetooth.ble.common.OKBLEDataUtils;
 
 import java.util.Set;
@@ -64,18 +65,18 @@ public class OKBLEAdvertiseManager {
                     int key = data.getManufacturerSpecificData().keyAt(i);
                     byte[] value = data.getManufacturerSpecificData().get(key);
                     advertiseDataBuilder.addManufacturerData(key, value);
-                    Log.e(TAG, " Manufacturer id:" + key + " data:" + OKBLEDataUtils.BytesToHexString(value));
+                    ALog.eTag("itaso", " Manufacturer id:" + key + " data:" + OKBLEDataUtils.BytesToHexString(value));
                 }
                 int size_2 = data.getServiceUuids().size();
                 for (int i = 0; i < size_2; i++) {
                     ParcelUuid uuid = data.getServiceUuids().get(i);
                     advertiseDataBuilder.addServiceUuid(uuid);
-                    Log.e(TAG, " service uuid:" + uuid.getUuid().toString());
+                    ALog.eTag("itaso", " service uuid:" + uuid.getUuid().toString());
                 }
 
                 Set<ParcelUuid> keySet = data.getServiceData().keySet();
                 for (ParcelUuid key_uuid : keySet) {
-                    Log.e(TAG, " service data uuid:" + key_uuid.getUuid().toString() + " data:" + OKBLEDataUtils.BytesToHexString(data.getServiceData().get(key_uuid)));
+                    ALog.eTag("itaso", " service data uuid:" + key_uuid.getUuid().toString() + " data:" + OKBLEDataUtils.BytesToHexString(data.getServiceData().get(key_uuid)));
                     advertiseDataBuilder.addServiceData(key_uuid, data.getServiceData().get(key_uuid));
                 }
 

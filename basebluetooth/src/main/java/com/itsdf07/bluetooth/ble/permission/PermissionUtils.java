@@ -16,6 +16,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
+import com.itsdf07.alog.ALog;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -291,7 +293,7 @@ public final class PermissionUtils {
                     | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
             if (sInstance == null) {
                 super.onCreate(savedInstanceState);
-                Log.e("PermissionUtils", "request permissions failed");
+                ALog.eTag("itaso", "request permissions failed");
                 finish();
                 return;
             }

@@ -3,6 +3,7 @@ package com.itsdf07.bluetooth.ble.beacon;
 import android.content.Context;
 import android.util.Log;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.bluetooth.ble.common.OKBLEDataUtils;
 import com.itsdf07.bluetooth.ble.server.advertise.OKBLEAdvertiseCallback;
 import com.itsdf07.bluetooth.ble.server.advertise.OKBLEAdvertiseData;
@@ -42,9 +43,9 @@ public class OKBLEBeBeaconManager {
         String measuredPower = OKBLEDataUtils.formatStringLenth(2, Integer.toHexString(-59), '0');//-59是 measuredPower,一般设备默认都是-59，这里固定了
 
 
-        Log.e(TAG, "startIBeacon->measuredPower:" + measuredPower + "," + Integer.toHexString(-59));
+        ALog.eTag("itaso", "startIBeacon->measuredPower:" + measuredPower + "," + Integer.toHexString(-59));
         String dataStr = beaconType + uuid + majorStr + minorStr + measuredPower;
-        Log.e(TAG, "startIBeacon->dataStr:" + dataStr);
+        ALog.eTag("itaso", "startIBeacon->dataStr:" + dataStr);
         byte[] data = OKBLEDataUtils.hexStringToBytes(dataStr);
 
         dataBuilder.addManufacturerData(0x004C, data);//004c是apple 公司id

@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.itsdf07.alog.ALog;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
 import com.itsdf07.bluetooth.ble.common.BLEOperationQueue;
 import com.itsdf07.bluetooth.ble.common.CommonUUIDUtils;
@@ -231,7 +232,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             handler.postDelayed(connectGattRunnable, 300);
             return true;
         } else {
-            Log.e(TAG, "doConnect->:the bluetoothDevice is null, please reset the bluetoothDevice");
+            ALog.eTag("itaso", "doConnect->:the bluetoothDevice is null, please reset the bluetoothDevice");
             return false;
         }
     }
@@ -253,7 +254,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
                 reSet();
                 mBluetoothGatt = bluetoothDevice.connectGatt(context, false,
                         gattCallback);
-                Log.e(TAG,"connectComplete->:----connectGatt-----");
+                ALog.eTag("itaso","connectComplete->:----connectGatt-----");
                 if (autoReconnect) {
                     handler.postDelayed(this, 30 * 1000);
                 }
@@ -327,14 +328,14 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            Log.e(TAG, "onConnectionStateChange->:onConnectionStateChange status:" + status + " newState:" + newState);
+            ALog.eTag("itaso", "onConnectionStateChange->:onConnectionStateChange status:" + status + " newState:" + newState);
             bleOperationQueue.clear();
             handler.removeCallbacks(operationOverTimeRunnable);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {// 连接成功
                     gatt.discoverServices();
                     if (OKBLEDeviceListeners != null) {
-                        Log.e(TAG,"onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
+                        ALog.eTag("itaso","onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
                         for (OKBLEDeviceListener listener : OKBLEDeviceListeners) {
                             listener.onConnected(deviceTAG);
                         }
@@ -344,7 +345,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
                     reSet();
 
                     if (OKBLEDeviceListeners != null) {
-                        Log.e(TAG,"onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
+                        ALog.eTag("itaso","onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
                         for (OKBLEDeviceListener listener : OKBLEDeviceListeners) {
                             listener.onDisconnected(deviceTAG);
                         }
@@ -357,7 +358,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
                 deviceStatus = DeviceStatus.DEVICE_STATUS_DISCONNECTED;
                 reSet();
                 if (OKBLEDeviceListeners != null) {
-                    Log.e(TAG,"onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
+                    ALog.eTag("itaso","onConnectionStateChange->OKBLEDeviceListeners size:" + OKBLEDeviceListeners.size());
 
                     for (OKBLEDeviceListener listener : OKBLEDeviceListeners) {
                         listener.onDisconnected(deviceTAG);
@@ -397,7 +398,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            Log.e(TAG, "onCharacteristicRead->status:" + status + " characteristic:" + characteristic.getUuid().toString() + " value:" + OKBLEDataUtils.BytesToHexString(characteristic.getValue()));
+            ALog.eTag("itaso", "onCharacteristicRead->status:" + status + " characteristic:" + characteristic.getUuid().toString() + " value:" + OKBLEDataUtils.BytesToHexString(characteristic.getValue()));
             handler.removeCallbacks(operationOverTimeRunnable);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (characteristic.getUuid().toString().equals(CommonUUIDUtils.Battery_Level)) {
@@ -437,7 +438,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
             handler.removeCallbacks(operationOverTimeRunnable);
-            Log.e(TAG, "onCharacteristicWrite->status:" + status + " characteristic:" + characteristic.getUuid().toString());
+            ALog.eTag("itaso", "onCharacteristicWrite->status:" + status + " characteristic:" + characteristic.getUuid().toString());
             if (OKBLEDeviceListeners != null) {
                 for (OKBLEDeviceListener listener : OKBLEDeviceListeners) {
                     listener.onWriteValue(deviceTAG, characteristic.getUuid().toString(), characteristic.getValue(), status == BluetoothGatt.GATT_SUCCESS);
@@ -464,7 +465,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            Log.e(TAG, "onCharacteristicChanged->characteristic:" + characteristic.getUuid().toString() + " value:" + OKBLEDataUtils.BytesToHexString(characteristic.getValue()));
+            ALog.eTag("itaso", "onCharacteristicChanged->characteristic:" + characteristic.getUuid().toString() + " value:" + OKBLEDataUtils.BytesToHexString(characteristic.getValue()));
             if (OKBLEDeviceListeners != null) {
                 for (OKBLEDeviceListener listener : OKBLEDeviceListeners) {
                     listener.onReceivedValue(deviceTAG, characteristic.getUuid().toString(), characteristic.getValue());
@@ -480,7 +481,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-            Log.e(TAG, "onDescriptorWrite->status:" + status + " descriptor:" + descriptor.getUuid().toString() + " char:" + descriptor.getCharacteristic().getUuid().toString());
+            ALog.eTag("itaso", "onDescriptorWrite->status:" + status + " descriptor:" + descriptor.getUuid().toString() + " char:" + descriptor.getCharacteristic().getUuid().toString());
             handler.removeCallbacks(operationOverTimeRunnable);
             if (!bleOperationQueue.isEmpty()) {
                 OKBLEOperation operation = bleOperationQueue.removeFirst();
@@ -508,7 +509,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
-            Log.e(TAG,"onMtuChanged->mtu:" + mtu);
+            ALog.eTag("itaso","onMtuChanged->mtu:" + mtu);
             handler.removeCallbacks(operationOverTimeRunnable);
             if (!bleOperationQueue.isEmpty()) {
                 OKBLEOperation operation = bleOperationQueue.removeFirst();
@@ -580,7 +581,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!isConnected()) {
                 String errMsg = "change mtu failed, device not connected";
-                Log.e(TAG,"addChangeMTUOperation->errMsg:" + errMsg);
+                ALog.eTag("itaso","addChangeMTUOperation->errMsg:" + errMsg);
                 if (changeMTUListener != null) {
                     changeMTUListener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Device_Not_Connected, errMsg);
                 }
@@ -588,7 +589,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             }
             if (mtu < Default_MTU) {
                 String errMsg = "change mtu failed, mtu invalid";
-                Log.e(TAG,"addChangeMTUOperation->errMsg:" + errMsg);
+                ALog.eTag("itaso","addChangeMTUOperation->errMsg:" + errMsg);
                 if (changeMTUListener != null) {
                     changeMTUListener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Device_Not_Connected, errMsg);
                 }
@@ -604,7 +605,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
 
         } else {
             String errMsg = "change mtu failed, need android api 21";
-            Log.e(TAG,"addChangeMTUOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addChangeMTUOperation->errMsg:" + errMsg);
             if (changeMTUListener != null) {
                 changeMTUListener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Other, errMsg);
             }
@@ -618,7 +619,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
     public void addWriteOperation(String characteristicUUID, byte[] value, OKBLEOperation.WriteOperationListener listener) {
         if (!isConnected()) {
             String errMsg = "addWriteOperation failed, device not connected";
-            Log.e(TAG,"addWriteOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addWriteOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Device_Not_Connected, errMsg);
             }
@@ -627,7 +628,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         if (value == null) {
 
             String errMsg = "addWriteOperation failed, value is null";
-            Log.e(TAG,"addWriteOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addWriteOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Null_Value, errMsg);
             }
@@ -638,7 +639,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         if (!OKBLEDataUtils.isValidUUID(characteristicUUID) && characteristicUUID.length() != 4) {
 
             String errMsg = "characteristicUUID not valid";
-            Log.e(TAG,"addWriteOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addWriteOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Invalid_UUID, errMsg);
             }
@@ -670,7 +671,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
                 checkNextBleOperation();
             } else {
                 String errMsg = "addWriteOperation failed, write property not found";
-                Log.e(TAG,"addWriteOperation->errMsg:" + errMsg);
+                ALog.eTag("itaso","addWriteOperation->errMsg:" + errMsg);
                 if (listener != null) {
                     listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Property_Not_Found, errMsg);
                 }
@@ -679,7 +680,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
 
         } else {
             String errMsg = "addWriteOperation failed, characteristic not found";
-            Log.e(TAG,"addWriteOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addWriteOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Not_Found, errMsg);
             }
@@ -691,7 +692,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
     public void addReadOperation(String characteristicUUID, OKBLEOperation.ReadOperationListener listener) {
         if (!isConnected()) {
             String errMsg = "addReadOperation failed, device not connected";
-            Log.e(TAG,"addReadOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addReadOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Device_Not_Connected, errMsg);
             }
@@ -700,7 +701,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         characteristicUUID = characteristicUUID.trim().toLowerCase();
         if (!OKBLEDataUtils.isValidUUID(characteristicUUID) && characteristicUUID.length() != 4) {
             String errMsg = "characteristicUUID not valid ";
-            Log.e(TAG,"addReadOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addReadOperation->errMsg:" + errMsg);
             if (listener != null) {
 
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Invalid_UUID, errMsg);
@@ -726,7 +727,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             } else {
 
                 String errMsg = "addReadOperation failed, read property not found";
-                Log.e(TAG,"addReadOperation->errMsg:" + errMsg);
+                ALog.eTag("itaso","addReadOperation->errMsg:" + errMsg);
                 if (listener != null) {
                     listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Property_Not_Found, errMsg);
                 }
@@ -734,7 +735,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             }
         } else {
             String errMsg = "addReadOperation failed, characteristic not found";
-            Log.e(TAG,"addReadOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addReadOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Not_Found, errMsg);
             }
@@ -755,7 +756,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         if (!OKBLEDataUtils.isValidUUID(characteristicUUID) && characteristicUUID.length() != 4) {
 
             String errMsg = "characteristicUUID not valid ";
-            Log.e(TAG,"addNotifyOrIndicateOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addNotifyOrIndicateOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Invalid_UUID, errMsg);
             }
@@ -790,7 +791,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
                 checkNextBleOperation();
             } else {
                 String errMsg = "addNotifyOrIndicateOperation failed, Notify or Indicate property not found";
-                Log.e(TAG,"addNotifyOrIndicateOperation->errMsg:" + errMsg);
+                ALog.eTag("itaso","addNotifyOrIndicateOperation->errMsg:" + errMsg);
                 if (listener != null) {
                     listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Property_Not_Found, errMsg);
                 }
@@ -799,7 +800,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
 
         } else {
             String errMsg = "addNotifyOrIndicateOperation failed, characteristic not found";
-            Log.e(TAG,"addNotifyOrIndicateOperation->errMsg:" + errMsg);
+            ALog.eTag("itaso","addNotifyOrIndicateOperation->errMsg:" + errMsg);
             if (listener != null) {
                 listener.onFail(OKBLEOperation.BaseOperationListener.Operation_FAILED_Characteristic_Not_Found, errMsg);
             }
@@ -816,7 +817,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         if (entireUUID.length() == 4) {
             entireUUID = CommonUUIDUtils.CommonUUIDStr_x.replace("xxxx", uuid);
         }
-        Log.e(TAG, "findCharacteristic->entireUUID:" + entireUUID);
+        ALog.eTag("itaso", "findCharacteristic->entireUUID:" + entireUUID);
         for (BluetoothGattService server : bluetoothGattServices) {
             for (BluetoothGattCharacteristic characteristic : server.getCharacteristics()) {
                 if (characteristic.getUuid().toString().equals(entireUUID)) {
@@ -837,14 +838,14 @@ public class OKBLEDeviceImp implements OKBLEDevice {
 
     synchronized private void doBleOperation(OKBLEOperation okbleOperation) {
 
-        Log.e(TAG, "doBleOperation->size:" + bleOperationQueue.getOperationSize());
+        ALog.eTag("itaso", "doBleOperation->size:" + bleOperationQueue.getOperationSize());
         if (!isConnected()) {
-            Log.e(TAG, "doBleOperation failed, device not connected");
+            ALog.eTag("itaso", "doBleOperation failed, device not connected");
             return;
         }
         switch (okbleOperation.operationType) {
             case OperationType_Read: {
-                Log.e(TAG, " read:" + okbleOperation.bleChar.getUuid().toString());
+                ALog.eTag("itaso", " read:" + okbleOperation.bleChar.getUuid().toString());
                 boolean success = readCharacteristic(okbleOperation.bleChar);
                 if (success) {
                     handler.removeCallbacks(operationOverTimeRunnable);
@@ -864,7 +865,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             }
             case OperationType_Enable_Notify:
             case OperationType_Enable_Indicate: {
-                Log.e(TAG, " enableNotification/Indication:"
+                ALog.eTag("itaso", " enableNotification/Indication:"
                         + okbleOperation.bleChar.getUuid().toString());
 
                 boolean success = setNotificationOrIndication(true, okbleOperation.bleChar);
@@ -886,7 +887,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             }
             case OperationType_Disable_Notify:
             case OperationType_Disable_Indicate: {
-                Log.e(TAG, " disableNotification/Indication:"
+                ALog.eTag("itaso", " disableNotification/Indication:"
                         + okbleOperation.bleChar.getUuid().toString());
                 boolean success = setNotificationOrIndication(false, okbleOperation.bleChar);
 
@@ -926,7 +927,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             }
             case OperationType_Change_MTU:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Log.e(TAG, " requestMtu :" + okbleOperation.mtu);
+                    ALog.eTag("itaso", " requestMtu :" + okbleOperation.mtu);
                     boolean success = mBluetoothGatt.requestMtu(okbleOperation.mtu);
                     if (success) {
                         handler.removeCallbacks(operationOverTimeRunnable);
@@ -976,34 +977,34 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             BluetoothGattCharacteristic characteristic) {
 
         if (!isConnected()) {
-            Log.e(TAG, "readCharacteristic failed, device not connected");
+            ALog.eTag("itaso", "readCharacteristic failed, device not connected");
             return false;
         }
 
         if (mBluetoothGatt == null) {
-            Log.e(TAG, "readCharacteristic failed, mBluetoothGatt is null");
+            ALog.eTag("itaso", "readCharacteristic failed, mBluetoothGatt is null");
             return false;
         }
         if (characteristic == null) {
-            Log.e(TAG, "readCharacteristic failed, characteristic is null");
+            ALog.eTag("itaso", "readCharacteristic failed, characteristic is null");
             return false;
         }
         boolean b = mBluetoothGatt.readCharacteristic(characteristic);
-        Log.e(TAG, " readCharacteristic " + b);
+        ALog.eTag("itaso", " readCharacteristic " + b);
         return b;
     }
 
     private boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] values) {
         if (!isConnected()) {
-            Log.e(TAG, "writeCharacteristic failed, device not connected");
+            ALog.eTag("itaso", "writeCharacteristic failed, device not connected");
             return false;
         }
         if (mBluetoothGatt == null) {
-            Log.e(TAG, "writeCharacteristic failed, mBluetoothGatt is null");
+            ALog.eTag("itaso", "writeCharacteristic failed, mBluetoothGatt is null");
             return false;
         }
         if (characteristic == null) {
-            Log.e(TAG, "writeCharacteristic failed, characteristic is null");
+            ALog.eTag("itaso", "writeCharacteristic failed, characteristic is null");
             return false;
         }
         characteristic.setValue(values);
@@ -1013,40 +1014,40 @@ public class OKBLEDeviceImp implements OKBLEDevice {
             characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         }
         boolean b = mBluetoothGatt.writeCharacteristic(characteristic);
-        Log.e(TAG, " writeCharacteristic " + b + ", value:" + OKBLEDataUtils.BytesToHexString(values));
+        ALog.eTag("itaso", " writeCharacteristic " + b + ", value:" + OKBLEDataUtils.BytesToHexString(values));
         return b;
     }
 
     private boolean setNotificationOrIndication(boolean enable,
                                                 BluetoothGattCharacteristic characteristic) {
         if (characteristic == null) {
-            Log.e(TAG, "setNotificationOrIndication failed, characteristic is null");
+            ALog.eTag("itaso", "setNotificationOrIndication failed, characteristic is null");
             return false;
         }
         if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0
                 && (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
-            Log.e(TAG, "setNotificationOrIndication failed, characteristic has no notification or indication function");
+            ALog.eTag("itaso", "setNotificationOrIndication failed, characteristic has no notification or indication function");
             return false;
         }
         if (!isConnected()) {
-            Log.e(TAG, "setNotificationOrIndication failed, device not connected");
+            ALog.eTag("itaso", "setNotificationOrIndication failed, device not connected");
             return false;
         }
         if (mBluetoothGatt == null) {
-            Log.e(TAG, "setNotificationOrIndication failed, mBluetoothGatt is null");
+            ALog.eTag("itaso", "setNotificationOrIndication failed, mBluetoothGatt is null");
             return false;
         }
 
         if (!mBluetoothGatt.setCharacteristicNotification(characteristic,
                 enable)) {
-            Log.e(TAG, "setNotificationOrIndication failed");
+            ALog.eTag("itaso", "setNotificationOrIndication failed");
             return false;
         }
 
         BluetoothGattDescriptor clientConfig = characteristic.getDescriptor(UUID.fromString(CommonUUIDUtils.Client_Characteristic_Configuration));
 
         if (clientConfig == null) {
-            Log.e(TAG, "setNotificationOrIndication failed,clientConfig is null");
+            ALog.eTag("itaso", "setNotificationOrIndication failed,clientConfig is null");
             return false;
         }
         byte[] configValue = null;
@@ -1061,18 +1062,18 @@ public class OKBLEDeviceImp implements OKBLEDevice {
         }
         boolean b = clientConfig.setValue(configValue);
         if (!b) {
-            Log.e(TAG, "setNotificationOrIndication failed,clientConfig setValue failed");
+            ALog.eTag("itaso", "setNotificationOrIndication failed,clientConfig setValue failed");
             return false;
         }
         b = mBluetoothGatt.writeDescriptor(clientConfig);
-        Log.e(TAG, "setNotificationOrIndication:" + b);
+        ALog.eTag("itaso", "setNotificationOrIndication:" + b);
         return b;
     }
 
     public boolean isNotifyEnabled(String uuid) {
         BluetoothGattCharacteristic characteristic = findCharacteristic(uuid);
         if (characteristic == null) {
-            Log.e(TAG, "characteristic not found");
+            ALog.eTag("itaso", "characteristic not found");
 
             return false;
         }
@@ -1095,7 +1096,7 @@ public class OKBLEDeviceImp implements OKBLEDevice {
     public boolean isIndicateEnabled(String uuid) {
         BluetoothGattCharacteristic characteristic = findCharacteristic(uuid);
         if (characteristic == null) {
-            Log.e(TAG, "characteristic not found");
+            ALog.eTag("itaso", "characteristic not found");
 
             return false;
         }
