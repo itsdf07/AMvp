@@ -1,11 +1,14 @@
 package com.itsdf07.mvp;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,12 +31,16 @@ public class BLE2Activity extends AppCompatActivity implements
         View.OnClickListener,
         OKBLEDeviceListener,
         AdapterView.OnItemSelectedListener {
-    private static final String TAG = "BLEActivity";
+    private static final String TAG = "BLE2Activity";
     public static final String EXTRA_BLEDEVICE = BLE2Activity.class.getName() + ".EXTRA_BLEDEVICE";
     public static final String UUIDWRITE = "0000ffe3-0000-1000-8000-00805f9b34fb";
     public static final String UUIDNOTIFY = "0000ffe2-0000-1000-8000-00805f9b34fb";
 
-    private boolean isWriteData = false;//当前是否正在写数据
+    private boolean isDataWriting = false;//当前是否正在写数据
+
+    private int handshakeNum = 0;
+
+
     private BLEScanResult bleScanResult;
     OKBLEDevice okbleDevice;
 
@@ -46,6 +53,9 @@ public class BLE2Activity extends AppCompatActivity implements
     private TextView tvConnectStatus;
     private Button btnMhzWrite;
     private Button btnMhzRead;
+
+    private EditText etCtcss2Accept;//接收频率
+    private EditText etCtcss2Send;//发送频率
 
     //发送的数据包个数
     private int packageDataIndex = 0;
@@ -106,6 +116,33 @@ public class BLE2Activity extends AppCompatActivity implements
      */
     private Spinner spPowerMode;
 
+
+    /**
+     * 信道选择
+     */
+    private Spinner spXdxz;
+
+    /**
+     * CTC/DCS解码
+     */
+    private Spinner spCtcss2Decode;
+    /**
+     * CTC/DCS编码
+     */
+    private Spinner spCtcss2Encode;
+    /**
+     * 扫描添加
+     */
+    private Spinner spScan;
+    /**
+     * 带宽
+     */
+    private Spinner spBandWidth;
+    /**
+     * 发射功率
+     */
+    private Spinner spTransmitPower;
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -118,6 +155,7 @@ public class BLE2Activity extends AppCompatActivity implements
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ALog.eTag(TAG, "..............................................");
         setContentView(R.layout.activity_ble_channel);
         bleScanResult = getIntent().getParcelableExtra(EXTRA_BLEDEVICE);
 
@@ -142,6 +180,9 @@ public class BLE2Activity extends AppCompatActivity implements
         btnMhzRead = findViewById(R.id.btn_readHz);
         btnMhzRead.setOnClickListener(this);
 
+        etCtcss2Accept = findViewById(R.id.et_rx);
+        etCtcss2Send = findViewById(R.id.et_tx);
+
 
         /**
          * gps:0-OFF,1-Automatic Mode,2-Manual Mode
@@ -158,6 +199,12 @@ public class BLE2Activity extends AppCompatActivity implements
         spTotTimeOut = findViewById(R.id.sp_tot_timeout);
         spDisplayTime = findViewById(R.id.sp_display_time);
         spPowerMode = findViewById(R.id.sp_power_model);
+        spXdxz = findViewById(R.id.sp_xdxz);
+        spCtcss2Decode = findViewById(R.id.sp_ctcss2Decode);
+        spCtcss2Encode = findViewById(R.id.sp_ctcss2Encode);
+        spScan = findViewById(R.id.sp_sacn);
+        spBandWidth = findViewById(R.id.sp_bandwidth);
+        spTransmitPower = findViewById(R.id.sp_transmitpower);
 
         spGps.setOnItemSelectedListener(this);
         spBluetoothStatus.setOnItemSelectedListener(this);
@@ -171,6 +218,12 @@ public class BLE2Activity extends AppCompatActivity implements
         spTotTimeOut.setOnItemSelectedListener(this);
         spDisplayTime.setOnItemSelectedListener(this);
         spPowerMode.setOnItemSelectedListener(this);
+        spXdxz.setOnItemSelectedListener(this);
+        spCtcss2Decode.setOnItemSelectedListener(this);
+        spCtcss2Encode.setOnItemSelectedListener(this);
+        spScan.setOnItemSelectedListener(this);
+        spBandWidth.setOnItemSelectedListener(this);
+        spTransmitPower.setOnItemSelectedListener(this);
     }
 
     private void initBleChannelSettingHashMap() {
@@ -195,10 +248,11 @@ public class BLE2Activity extends AppCompatActivity implements
     }
 
     public void sendData(String uuid, byte[] data) {
+
         okbleDevice.addWriteOperation(uuid, data, new OKBLEOperation.WriteOperationListener() {
             @Override
             public void onWriteValue(byte[] value) {
-                Log.e(TAG, "onWriteValue->value:" + Arrays.toString(value));
+                ALog.eTag(TAG, "value:%s", Arrays.toString(value));
                 runOnUiThread(new Runnable() {
 
                     @Override
@@ -211,7 +265,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void onFail(int code, String errMsg) {
-                Log.e(TAG, "onFail->code:" + code + ",errMsg:" + errMsg);
+                ALog.eTag(TAG, "code:%s,errMsg:%s", code, errMsg);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -223,7 +277,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void onExecuteSuccess(OKBLEOperation.OperationType type) {
-                Log.e(TAG, "onExecuteSuccess->type:" + type.name());
+                ALog.eTag(TAG, "type:%s", type);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -238,20 +292,25 @@ public class BLE2Activity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_writeHz:
-                isWriteData = true;
-                count = 1;
+                btnMhzWrite.setEnabled(false);
+                Toast.makeText(this, "正在写数据，请稍等", Toast.LENGTH_SHORT).show();
+                isDataWriting = true;
+                handshakeNum = 1;
+                ALog.eTag(TAG, "isDataWriting:%s,handshakeNum:%s,value:%s", isDataWriting, handshakeNum, Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
-                Log.e("Protocol-BLE", "Protocol:" + Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
                 break;
             case R.id.btn_readHz:
-                isWriteData = false;
-                count = 1;
+                isDataWriting = false;
+                handshakeNum = 1;
+                ALog.eTag(TAG, "isDataWriting::%s,handshakeNum::%s,value::%s", isDataWriting, handshakeNum, Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
             default:
                 break;
         }
     }
+
+    byte[] readPublie = new byte[4];
 
     @Override
     public void onConnected(String deviceTAG) {
@@ -261,14 +320,13 @@ public class BLE2Activity extends AppCompatActivity implements
                 tvConnectStatus.setText("已连接");
             }
         });
-        Log.e(TAG, "onConnected->deviceTAG:" + deviceTAG);
-
+        ALog.eTag(TAG, "deviceTAG:%s", deviceTAG);
         final OKBLEOperation.OperationType[] operationType = new OKBLEOperation.OperationType[1];
 //        Toast.makeText(BLEActivity.this, "通知打开中...", Toast.LENGTH_SHORT).show();
         okbleDevice.addNotifyOrIndicateOperation(UUIDNOTIFY, true, new OKBLEOperation.NotifyOrIndicateOperationListener() {
             @Override
             public void onNotifyOrIndicateComplete() {
-                Log.e(TAG, "onNotifyOrIndicateComplete->通知已打开");
+                ALog.eTag(TAG, "通知已打开");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -287,7 +345,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void onFail(int code, final String errMsg) {
-                Log.e(TAG, "onFail->code:" + code + ",errMsg:" + errMsg);
+                ALog.eTag(TAG, "code:%s,errMsg:%s", code, errMsg);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -297,7 +355,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void onExecuteSuccess(OKBLEOperation.OperationType type) {
-                Log.e(TAG, "onExecuteSuccess->type:" + type.name());
+                ALog.eTag(TAG, "type:%s", type.name());
                 operationType[0] = type;
             }
         });
@@ -305,7 +363,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
     @Override
     public void onDisconnected(String deviceTAG) {
-        Log.e(TAG, "onDisconnected->deviceTAG:" + deviceTAG);
+        ALog.eTag(TAG, "deviceTAG:%s", deviceTAG);
         if (okbleDevice != null) {
             okbleDevice.disConnect(false);
             okbleDevice.remove();
@@ -314,25 +372,24 @@ public class BLE2Activity extends AppCompatActivity implements
 
     @Override
     public void onReadBattery(String deviceTAG, int battery) {
-        Log.e(TAG, "onReadBattery->deviceTAG:" + deviceTAG + ",battery:" + battery);
+        ALog.eTag(TAG, "deviceTAG:%s,battery:%s", deviceTAG, battery);
     }
 
-    private int count = 0;
-    byte[] readPublie = new byte[4];
 
     @Override
     public void onReceivedValue(String deviceTAG, String uuid, final byte[] value) {
-        ALog.eTag(TAG, "onReceivedValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",value:" + Arrays.toString(value));
-        if (isWriteData) {
-            if (count == 1) {
+        ALog.eTag(TAG, "onReceivedValue->isDataWriting:%s,handshakeNum:%s,deviceTAG:%s,uuid:%s,value:%s",
+                isDataWriting, handshakeNum, deviceTAG, uuid, Arrays.toString(value));
+        if (isDataWriting) {
+            if (handshakeNum == 1) {
                 if (value[0] == (byte) 0x06) {
-                    count++;
+                    handshakeNum++;
                     //TODO 发送 (byte) 0x02
                     sendData(UUIDWRITE, (byte) 0x02);
                 }
-            } else if (count == 2) {
+            } else if (handshakeNum == 2) {
                 if (value.length == BLEMhzUtils.acceptHandshakeProtocol().length) {
-                    count++;
+                    handshakeNum++;
                     boolean isMatch = true;
                     for (int i = 0; i < value.length; i++) {
                         if (value[i] != BLEMhzUtils.acceptHandshakeProtocol()[i]) {
@@ -341,27 +398,34 @@ public class BLE2Activity extends AppCompatActivity implements
                         }
                     }
                     if (isMatch) {
+                        Log.e(TAG, "onReceivedValue->握手成功....");
                         // TODO 发送 (byte) 0x06
                         sendData(UUIDWRITE, (byte) 0x06);
                     }
 
                 }
-            } else if (count == 3) {
+            } else if (handshakeNum == 3) {
                 if (value[0] == (byte) 0x06) {
-                    count = 0;
+                    handshakeNum = 0;
                     //TODO 开始发送第一个数据包:设置数据
-                    Log.e(TAG, "onReceivedValue->count == 3:握手成功，可以开始发送公共协议数据了");
+                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
                     sendData(UUIDWRITE, getBLEPublicDataPackage(blePublicSetting));
                 }
             } else {
                 if (value[0] == (byte) 0x06) {
 
                     //TODO 开始发送第N+1个数据包:设置数据
-                    Log.e(TAG, "onReceivedValue->count == 3:握手成功，可以开始发送第" + packageDataIndex + "个信道数据了");
+                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送第" + packageDataIndex + "个信道数据了");
                     if (packageDataIndex >= 32) {
                         sendData(UUIDWRITE, (byte) 0x45);
                         packageDataIndex = 0;
-                        isWriteData = false;
+                        isDataWriting = false;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                btnMhzWrite.setEnabled(true);
+                            }
+                        });
                     } else {
                         sendData(UUIDWRITE, getChannelDataPackage(bleChannelSettingHashMap.get(packageDataIndex)));
                         packageDataIndex++;
@@ -369,15 +433,15 @@ public class BLE2Activity extends AppCompatActivity implements
                 }
             }
         } else {
-            if (count == 1) {
+            if (handshakeNum == 1) {
                 if (value[0] == (byte) 0x06) {
-                    count++;
+                    handshakeNum++;
                     //TODO 发送 (byte) 0x02
                     sendData(UUIDWRITE, (byte) 0x02);
                 }
-            } else if (count == 2) {
+            } else if (handshakeNum == 2) {
                 if (value.length == BLEMhzUtils.acceptHandshakeProtocol().length) {
-                    count++;
+                    handshakeNum++;
                     boolean isMatch = true;
                     for (int i = 0; i < value.length; i++) {
                         if (value[i] != BLEMhzUtils.acceptHandshakeProtocol()[i]) {
@@ -391,11 +455,11 @@ public class BLE2Activity extends AppCompatActivity implements
                     }
 
                 }
-            } else if (count == 3) {
+            } else if (handshakeNum == 3) {
                 if (value[0] == (byte) 0x06) {
-                    count = 0;
+                    handshakeNum = 0;
                     //TODO 开始发送第一个数据包:设置数据
-                    Log.e(TAG, "onReceivedValue->count == 3:握手成功，可以开始发送公共协议数据了");
+                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
                     readPublie[0] = 0x52;
                     readPublie[1] = 0x0A;
                     readPublie[2] = 0x00;
@@ -410,7 +474,7 @@ public class BLE2Activity extends AppCompatActivity implements
                     sendData(UUIDWRITE, (byte) 0x06);
                 } else if (value[0] == (byte) 0x06) {
                     sendData(UUIDWRITE, (byte) 0x45);
-                    isWriteData = false;
+                    isDataWriting = false;
                 }
             }
         }
@@ -418,21 +482,22 @@ public class BLE2Activity extends AppCompatActivity implements
 
     @Override
     public void onWriteValue(String deviceTAG, String uuid, byte[] value, boolean success) {
-        Log.e(TAG, "onWriteValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",value:" + Arrays.toString(value));
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,success:%s,value:%s", deviceTAG, uuid, success, Arrays.toString(value));
     }
 
     @Override
     public void onReadValue(String deviceTAG, String uuid, byte[] value, boolean success) {
-        Log.e(TAG, "onReadValue->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",success:" + success + ",value:" + Arrays.toString(value));
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,success:%s,value:%s", deviceTAG, uuid, success, Arrays.toString(value));
     }
 
     @Override
     public void onNotifyOrIndicateComplete(String deviceTAG, String uuid, boolean enable, boolean success) {
-        Log.e(TAG, "onNotifyOrIndicateComplete->deviceTAG:" + deviceTAG + ",uuid:" + uuid + ",success:" + success + ",enable:" + enable);
+        ALog.eTag(TAG, "deviceTAG:%s,uuid:%s,success:%s,enable:%s", deviceTAG, uuid, success, enable);
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        ALog.eTag(TAG, "position:%s,id:%s", position, id);
         if (null == blePublicSetting) {
             Log.w(TAG, "blePublicSetting is null");
             return;
@@ -476,6 +541,23 @@ public class BLE2Activity extends AppCompatActivity implements
             case R.id.sp_power_model:
                 blePublicSetting.setPowerMode(spPowerMode.getSelectedItemPosition());
                 break;
+            case R.id.sp_xdxz:
+                break;
+            case R.id.sp_ctcss2Decode:
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Decode(spCtcss2Decode.getSelectedItem().toString());
+                break;
+            case R.id.sp_ctcss2Encode:
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Decode(spCtcss2Encode.getSelectedItem().toString());
+                break;
+            case R.id.sp_sacn:
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setScan(position);
+                break;
+            case R.id.sp_bandwidth:
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setBandwidth(position);
+                break;
+            case R.id.sp_transmitpower:
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTransmitPower(position);
+                break;
             default:
                 break;
         }
@@ -483,7 +565,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
+        ALog.eTag(TAG, "onNothingSelected................");
     }
 
     private byte[] getBLEPublicDataPackage(BLEPublicSetting blePublicSetting) {
@@ -512,29 +594,98 @@ public class BLE2Activity extends AppCompatActivity implements
         return datas;
     }
 
+
     private byte[] getChannelDataPackage(BLEChannelSetting bleChannelSetting) {
+        byte[] recHz = tx2Hex(bleChannelSetting.getTx2Receive());
+        byte[] sendHz = tx2Hex(bleChannelSetting.getTx2Send());
+        byte[] decodeCtcDcs = converCtcDcs2DEC(bleChannelSetting.getCtcss2Decode());
+        byte[] encodeCtcDcs = converCtcDcs2DEC(bleChannelSetting.getCtcss2Encode());
         byte[] datas = new byte[20];
         short address = (short) ((bleChannelSetting.getChannelNum() - 1) * 16);
         datas[0] = 0x57;
         datas[1] = (byte) (address >> 8);
         datas[2] = (byte) address;
         datas[3] = 0x10;
-        datas[4] = 0x00;
-        datas[5] = 0x25;
-        datas[6] = 0x12;
-        datas[7] = 0x40;
-        datas[8] = 0x00;
-        datas[9] = 0x25;
-        datas[10] = 0x12;
-        datas[11] = 0x40;
-        datas[12] = (byte) 0x9E;
-        datas[13] = 0x02;
-        datas[14] = (byte) 0x9E;
-        datas[15] = 0x02;
-        datas[16] = 0x03;
-        datas[17] = 0x02;
+
+        datas[4] = recHz[0];
+        datas[5] = recHz[1];
+        datas[6] = recHz[2];
+        datas[7] = recHz[3];
+        datas[8] = sendHz[0];
+        datas[9] = sendHz[1];
+        datas[10] = sendHz[2];
+        datas[11] = sendHz[3];
+        datas[12] = encodeCtcDcs[0];
+        datas[13] = encodeCtcDcs[1];
+        datas[14] = decodeCtcDcs[0];
+        datas[15] = decodeCtcDcs[1];
+        datas[16] = (byte) ((byte) bleChannelSetting.getTransmitPower() + (((byte) bleChannelSetting.getBandwidth()) << 1));
+        datas[17] = (byte) (((byte) bleChannelSetting.getBandwidth()) << 1);
         datas[18] = (byte) 0xFF;
         datas[19] = (byte) 0xFF;
         return datas;
+    }
+
+
+    /**
+     * 信道频率数据
+     * 把462.0125的转成发送格式为：50 12 20 46
+     *
+     * @param param 462.0125
+     * @return
+     */
+    private byte[] tx2Hex(String param) {
+        try {
+            byte[] tx = new byte[4];
+            long l = new Double(Double.valueOf(Double.valueOf(param).doubleValue() * 100000.0D).doubleValue()).longValue();
+            param = l + "";
+            if (param.length() != 8) {
+                Log.d(TAG, "信道频率有误,param:" + param);
+                return null;
+            }
+            tx[0] = Byte.parseByte(param.substring(6, 8));
+            tx[1] = Byte.parseByte(param.substring(4, 6));
+            tx[2] = Byte.parseByte(param.substring(2, 4));
+            tx[3] = Byte.parseByte(param.substring(0, 2));
+            return tx;
+        } catch (Exception e) {
+            Log.e(TAG, "e:", e);
+        }
+        return null;
+    }
+
+    /**
+     * CTC/DCS 编解码转换成DEC数据
+     * 如编解码 69.3 转成DEC数据：9306
+     *
+     * @param value 如 69.3
+     * @return 9306
+     */
+    private byte[] converCtcDcs2DEC(String value) {
+        byte[] dec = new byte[2];
+        if (value.contains("I")) {//0xA800
+            value = value.replace("D", "").replace("I", "");
+            short decValue = (short) (Integer.valueOf(value, 8) + 0xA800);
+            dec[0] = (byte) decValue;
+            dec[1] = (byte) (decValue >> 8);
+        } else if (value.contains("N")) {//0x2800
+            value = value.replace("D", "").replace("N", "");
+            short decValue = (short) (Integer.valueOf(value, 8) + 0x2800);
+            dec[0] = (byte) decValue;
+            dec[1] = (byte) (decValue >> 8);
+        } else if (value.contains(".")) {
+            if (!(value + "").matches("[0-9]*")) {
+                dec[0] = (byte) 0xFF;
+                dec[1] = (byte) 0xFF;
+                return dec;
+            }
+            short decValue = (short) (Double.valueOf(value) * 10);
+            dec[0] = (byte) decValue;
+            dec[1] = (byte) (decValue >> 8);
+        } else {
+            dec[0] = (byte) 0xFF;
+            dec[1] = (byte) 0xFF;
+        }
+        return dec;
     }
 }

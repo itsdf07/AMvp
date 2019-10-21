@@ -3,6 +3,7 @@ package com.itsdf07.mvp;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.itsdf07.alog.ALog;
 import com.itsdf07.alog.ALogLevel;
@@ -19,6 +20,8 @@ public class MainActivity extends BaseMvpActivity<MainPresenter> implements Main
     @Override
     public void afterPresenter() {
         ALog.init().setLog2Local(true).setLogLevel(ALogLevel.FULL).setShowThreadInfo(false);
+        TextView version = findViewById(R.id.tv_version);
+        ALog.dTag(TAG, "-------------------------------->>>>" + version.getText().toString());
     }
 
     @Override
@@ -28,7 +31,8 @@ public class MainActivity extends BaseMvpActivity<MainPresenter> implements Main
 
     @Override
     public void initView() {
-        ALog.dTag(TAG, "...");
+
+
         ((Button) $(R.id.btn_intent_nf877_2_ble)).setOnClickListener(this);
         ((Button) $(R.id.btn_intent_wait_2_dev)).setOnClickListener(this);
     }
