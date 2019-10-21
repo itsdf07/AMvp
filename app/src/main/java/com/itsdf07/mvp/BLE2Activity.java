@@ -26,6 +26,7 @@ import com.itsdf07.bluetooth.ble.client.core.OKBLEOperation;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
 import com.itsdf07.mvp.works.ble.BLEMhzUtils;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 

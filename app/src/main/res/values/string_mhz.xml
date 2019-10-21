@@ -120,7 +120,7 @@
         <item>9</item>
     </string-array>
     <!--蓝牙开关-->
-    <string-array name="array_bluetooth_status">
+    <string-array name="array_gps">
         <item>OFF</item>
         <item>Automatic Model</item>
         <item>Manual Model</item>
