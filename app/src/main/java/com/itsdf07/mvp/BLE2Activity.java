@@ -323,8 +323,8 @@ public class BLE2Activity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_writeHz:
-//                btnMhzWrite.setEnabled(false);
-//                btnMhzRead.setEnabled(false);
+                btnMhzWrite.setEnabled(false);
+                btnMhzRead.setEnabled(false);
                 Toast.makeText(this, "正在写数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = true;
                 handshakeNum = 1;
@@ -333,8 +333,8 @@ public class BLE2Activity extends AppCompatActivity implements
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
             case R.id.btn_readHz:
-//                btnMhzWrite.setEnabled(false);
-//                btnMhzRead.setEnabled(false);
+                btnMhzWrite.setEnabled(false);
+                btnMhzRead.setEnabled(false);
                 Toast.makeText(this, "正在读取数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = false;
                 handshakeNum = 1;
@@ -461,8 +461,9 @@ public class BLE2Activity extends AppCompatActivity implements
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-//                                btnMhzWrite.setEnabled(true);
-//                                btnMhzRead.setEnabled(true);
+                                Toast.makeText(BLE2Activity.this, "数据写入完成", Toast.LENGTH_SHORT).show();
+                                btnMhzWrite.setEnabled(true);
+                                btnMhzRead.setEnabled(true);
                             }
                         });
                     } else {
@@ -574,6 +575,9 @@ public class BLE2Activity extends AppCompatActivity implements
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                Toast.makeText(BLE2Activity.this, "数据读取完成", Toast.LENGTH_SHORT).show();
+                                btnMhzWrite.setEnabled(true);
+                                btnMhzRead.setEnabled(true);
                                 updataPublic((BLEPublicSetting) bleChannelSettingHashMap.get(0));
                                 updataChannel((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1));
                             }
