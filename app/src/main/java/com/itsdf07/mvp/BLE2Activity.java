@@ -261,9 +261,9 @@ public class BLE2Activity extends AppCompatActivity implements
         for (int i = 1; i <= 32; i++) {
             BLEChannelSetting bleChannelSetting = new BLEChannelSetting();
             bleChannelSetting.setChannelNum(i);
-            bleChannelSetting.setTx2Send("400.22500");
-            bleChannelSetting.setTx2Receive("400.22500");
-            bleChannelSetting.setCtcss2Decode("D023N");
+            bleChannelSetting.setTx2Send("400.12500");
+            bleChannelSetting.setTx2Receive("400.12500");
+            bleChannelSetting.setCtcss2Decode("67.0");
             bleChannelSetting.setCtcss2Encode("67.0");
             bleChannelSetting.setTransmitPower(1);
             bleChannelSetting.setScan(0);
@@ -538,18 +538,25 @@ public class BLE2Activity extends AppCompatActivity implements
                         rx = demical2Hex(results);
                         rxResult = rx.substring(0, 3) + "." + rx.substring(3);
                         ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTx2Send(rxResult);
-                        short de = (short) ((short) value[14] + (((short) (value[15]) << 8)));
+                        short de = (short) ((short) (value[14] & 0xFF) + (((short) ((value[15] & 0xFF)) << 8)));
                         if (de > 0x2800) {
-                            double result = (de - 0x2800);
-                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode("D" + result / 10 + result % 10 + "N");
+                            String octalString = Integer.toOctalString(de - 0x2800);
+                            if (octalString.length()<3){
+                                ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode("D0" + octalString + "N");
+                            } else {
+                                ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode("D" + octalString + "N");
+                            }
                         } else {
                             ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode(de / 10 + "." + de % 10);
                         }
-                        de = (short) ((short) value[12] + (((short) (value[13]) << 8)));
+                        de = (short) ((short) (value[12] & 0xFF) + (((short) (value[13] & 0xFF) << 8)));
                         if (de > 0x2800) {
-                            double result = (de - 0x2800);
-                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode("D" + result / 10 + "." + result % 10 + "N");
-                        } else {
+                            String octalString = Integer.toOctalString(de - 0x2800);
+                            if (octalString.length()<3){
+                                ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode("D0" + octalString + "N");
+                            } else {
+                                ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode("D" + octalString + "N");
+                            }} else {
                             ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode(de / 10 + "." + de % 10);
                         }
                         ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTransmitPower(value[16] % 2);
