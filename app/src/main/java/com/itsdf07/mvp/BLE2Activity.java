@@ -26,7 +26,6 @@ import com.itsdf07.bluetooth.ble.client.core.OKBLEOperation;
 import com.itsdf07.bluetooth.ble.client.scan.BLEScanResult;
 import com.itsdf07.mvp.works.ble.BLEMhzUtils;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -46,12 +45,10 @@ public class BLE2Activity extends AppCompatActivity implements
 
     private BLEScanResult bleScanResult;
     OKBLEDevice okbleDevice;
-
-    private BLEPublicSetting blePublicSetting = new BLEPublicSetting();
     /**
      * 16信道对应的独立信道协议
      */
-    private HashMap<Integer, BLEChannelSetting> bleChannelSettingHashMap = new HashMap<>();
+    private HashMap<Integer, Object> bleChannelSettingHashMap = new HashMap<>();
 
     private TextView tvConnectStatus;
     private Button btnMhzWrite;
@@ -195,7 +192,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setTx2Receive(s.toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition())).setTx2Receive(s.toString());
             }
         });
         etCtcss2Send = findViewById(R.id.et_tx);
@@ -210,7 +207,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setTx2Send(s.toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition())).setTx2Send(s.toString());
             }
         });
 
@@ -258,9 +255,12 @@ public class BLE2Activity extends AppCompatActivity implements
     }
 
     private void initBleChannelSettingHashMap() {
-        for (int i = 0; i < 32; i++) {
+
+        BLEPublicSetting blePublicSetting = new BLEPublicSetting();
+        bleChannelSettingHashMap.put(0, blePublicSetting);
+        for (int i = 1; i <= 32; i++) {
             BLEChannelSetting bleChannelSetting = new BLEChannelSetting();
-            bleChannelSetting.setChannelNum(i + 1);
+            bleChannelSetting.setChannelNum(i);
             bleChannelSetting.setTx2Send("400.22500");
             bleChannelSetting.setTx2Receive("400.22500");
             bleChannelSetting.setCtcss2Decode("D023N");
@@ -328,6 +328,7 @@ public class BLE2Activity extends AppCompatActivity implements
                 Toast.makeText(this, "正在写数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = true;
                 handshakeNum = 1;
+                packageDataIndex = 0;
                 ALog.eTag(TAG, "isDataWriting:%s,handshakeNum:%s,value:%s", isDataWriting, handshakeNum, Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
@@ -337,6 +338,7 @@ public class BLE2Activity extends AppCompatActivity implements
                 Toast.makeText(this, "正在读取数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = false;
                 handshakeNum = 1;
+                packageDataIndex = 0;
                 ALog.eTag(TAG, "isDataWriting::%s,handshakeNum::%s,value::%s", isDataWriting, handshakeNum, Arrays.toString(BLEMhzUtils.handshakeProtocolHead()));
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
@@ -444,14 +446,15 @@ public class BLE2Activity extends AppCompatActivity implements
                     handshakeNum = 0;
                     //TODO 开始发送第一个数据包:设置数据
                     ALog.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
-                    blePublicSetting.setBluetoothStatus(1);
-                    sendData(UUIDWRITE, getBLEPublicDataPackage(blePublicSetting));
+                    ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setBluetoothStatus(1);
+                    packageDataIndex = packageDataIndex + 1;
+                    sendData(UUIDWRITE, getBLEPublicDataPackage((BLEPublicSetting) bleChannelSettingHashMap.get(0)));
                 }
             } else {
                 if (value[0] == (byte) 0x06) {
                     //TODO 开始发送第N+1个数据包:设置数据
                     Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送第" + packageDataIndex + "个信道数据了");
-                    if (packageDataIndex >= 32) {
+                    if (packageDataIndex > 32) {
                         sendData(UUIDWRITE, (byte) 0x45);
                         packageDataIndex = 0;
                         isDataWriting = false;
@@ -463,7 +466,7 @@ public class BLE2Activity extends AppCompatActivity implements
                             }
                         });
                     } else {
-                        sendData(UUIDWRITE, getChannelDataPackage(bleChannelSettingHashMap.get(packageDataIndex)));
+                        sendData(UUIDWRITE, getChannelDataPackage((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)));
                         packageDataIndex++;
                     }
                 }
@@ -487,7 +490,6 @@ public class BLE2Activity extends AppCompatActivity implements
                     }
                     if (isMatch) {
                         ALog.e(TAG, "onReceivedValue->握手成功....");
-                        // TODO 发送 (byte) 0x06
                         sendData(UUIDWRITE, (byte) 0x06);
                     }
 
@@ -495,8 +497,7 @@ public class BLE2Activity extends AppCompatActivity implements
             } else if (handshakeNum == 3) {
                 if (value[0] == (byte) 0x06) {
                     handshakeNum = 0;
-                    //TODO 开始发送第一个数据包:设置数据
-                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
+                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始读取公共协议数据了");
                     readPublie[0] = 0x52;
                     readPublie[1] = 0x0A;
                     readPublie[2] = 0x00;
@@ -506,12 +507,45 @@ public class BLE2Activity extends AppCompatActivity implements
             } else {
                 if (value[0] == (byte) 0x57
                         && value[1] == readPublie[1]
-                        && value[2] == readPublie[2]
-                        && value[3] == readPublie[3]) {
+                        && value[2] == readPublie[2]) {
+                    Log.e(TAG, "接收到第" + packageDataIndex + "个数据");
+                    //TODO 对BLEPublicSetting进行复制
+                    if (packageDataIndex == 0) {
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setGps(value[4]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setBluetoothStatus(value[5]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setSquelch1(value[6]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setVoiceLevel(value[8]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setVoiceDelay(value[9]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setScanType(value[10]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setDisplayModel(value[11]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setBeep(value[12]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setVoice2Send(value[13]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTotTimeOut(value[14]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setDisplayTime(value[15]);
+                        ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setPowerMode(value[16]);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updataPublic((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex));
+                            }
+                        });
+                    } else {
+//                        ((BLEChannelSetting)bleChannelSettingHashMap.get(packageDataIndex)).
+                    }
                     sendData(UUIDWRITE, (byte) 0x06);
                 } else if (value[0] == (byte) 0x06) {
-                    sendData(UUIDWRITE, (byte) 0x45);
-                    isDataWriting = false;
+                    if (packageDataIndex <= 32) {
+                        ++packageDataIndex;
+                        short address = (short) ((packageDataIndex - 1) * 16);
+                        readPublie[1] = (byte) (address >> 8);
+                        readPublie[2] = (byte) address;
+                        sendData(UUIDWRITE, readPublie);
+                    } else {
+                        packageDataIndex = 0;
+//                        sendData(UUIDWRITE, (byte) 0x45);
+                        isDataWriting = false;
+                    }
+
                 }
             }
         }
@@ -535,65 +569,65 @@ public class BLE2Activity extends AppCompatActivity implements
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         ALog.eTag(TAG, "position:%s,id:%s", position, id);
-        if (null == blePublicSetting) {
+        if (null == bleChannelSettingHashMap.get(0)) {
             Log.w(TAG, "blePublicSetting is null");
             return;
         }
         switch (parent.getId()) {
             case R.id.sp_gps:
-                blePublicSetting.setGps(spGps.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setGps(spGps.getSelectedItemPosition());
                 break;
             case R.id.sp_bluetooth_status:
 //                Log.d("SPPPP", "position:" + position + ",value:" + spBluetoothStatus.getSelectedItem().toString());
 //                spBluetoothStatus.setSelection(position,true);
-                blePublicSetting.setBluetoothStatus(spBluetoothStatus.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setBluetoothStatus(spBluetoothStatus.getSelectedItemPosition());
                 break;
             case R.id.sp_squelch1:
-                blePublicSetting.setSquelch1(spSquelch1.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setSquelch1(spSquelch1.getSelectedItemPosition());
                 break;
             case R.id.sp_voice_level:
-                blePublicSetting.setVoiceLevel(spVoiceLevel.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setVoiceLevel(spVoiceLevel.getSelectedItemPosition());
                 break;
             case R.id.sp_voice_delay:
-                blePublicSetting.setVoiceDelay((spVoiceDelay.getSelectedItemPosition()));
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setVoiceDelay((spVoiceDelay.getSelectedItemPosition()));
                 break;
             case R.id.sp_scan_type:
-                blePublicSetting.setScanType(spSscanType.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setScanType(spSscanType.getSelectedItemPosition());
                 break;
             case R.id.sp_display_model:
-                blePublicSetting.setDisplayModel(spDisplayModel.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setDisplayModel(spDisplayModel.getSelectedItemPosition());
                 break;
             case R.id.sp_beep:
-                blePublicSetting.setBeep(spBeep.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setBeep(spBeep.getSelectedItemPosition());
                 break;
             case R.id.sp_voice2send:
-                blePublicSetting.setVoice2Send(spVoice2Send.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setVoice2Send(spVoice2Send.getSelectedItemPosition());
                 break;
             case R.id.sp_tot_timeout:
-                blePublicSetting.setTotTimeOut(spTotTimeOut.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setTotTimeOut(spTotTimeOut.getSelectedItemPosition());
                 break;
             case R.id.sp_display_time:
-                blePublicSetting.setDisplayTime(spDisplayTime.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setDisplayTime(spDisplayTime.getSelectedItemPosition());
                 break;
             case R.id.sp_power_model:
-                blePublicSetting.setPowerMode(spPowerMode.getSelectedItemPosition());
+                ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setPowerMode(spPowerMode.getSelectedItemPosition());
                 break;
             case R.id.sp_xdxz:
                 break;
             case R.id.sp_ctcss2Decode:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Decode(spCtcss2Decode.getSelectedItem().toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setCtcss2Decode(spCtcss2Decode.getSelectedItem().toString());
                 break;
             case R.id.sp_ctcss2Encode:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Encode(spCtcss2Encode.getSelectedItem().toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setCtcss2Encode(spCtcss2Encode.getSelectedItem().toString());
                 break;
             case R.id.sp_sacn:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setScan(position);
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setScan(position);
                 break;
             case R.id.sp_bandwidth:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setBandwidth(position);
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setBandwidth(position);
                 break;
             case R.id.sp_transmitpower:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTransmitPower(position);
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setTransmitPower(position);
                 break;
             default:
                 break;
@@ -743,5 +777,19 @@ public class BLE2Activity extends AppCompatActivity implements
         }
         String hexadecimal = Integer.toHexString(demical);
         return hexadecimal;
+    }
+
+    private void updataPublic(BLEPublicSetting blePublicSetting) {
+        spGps.setSelection(blePublicSetting.getGps(), true);
+        spBluetoothStatus.setSelection(blePublicSetting.getBluetoothStatus(), true);
+        spSquelch1.setSelection(blePublicSetting.getVoiceLevel(), true);
+        spVoiceDelay.setSelection(blePublicSetting.getVoiceDelay(), true);
+        spSscanType.setSelection(blePublicSetting.getScanType(), true);
+        spDisplayModel.setSelection(blePublicSetting.getDisplayModel(), true);
+        spBeep.setSelection(blePublicSetting.getBeep(), true);
+        spVoice2Send.setSelection(blePublicSetting.getVoice2Send(), true);
+        spTotTimeOut.setSelection(blePublicSetting.getTotTimeOut(), true);
+        spDisplayTime.setSelection(blePublicSetting.getDisplayTime(), true);
+        spPowerMode.setSelection(blePublicSetting.getPowerMode(), true);
     }
 }
