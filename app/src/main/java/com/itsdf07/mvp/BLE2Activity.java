@@ -497,7 +497,8 @@ public class BLE2Activity extends AppCompatActivity implements
             } else if (handshakeNum == 3) {
                 if (value[0] == (byte) 0x06) {
                     handshakeNum = 0;
-                    Log.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始读取公共协议数据了");
+                    packageDataIndex = 0;
+                    Log.e("readData", "开始请求公共协议数据，请求第" + packageDataIndex + "个数据包");
                     readPublie[0] = 0x52;
                     readPublie[1] = 0x0A;
                     readPublie[2] = 0x00;
@@ -507,10 +508,12 @@ public class BLE2Activity extends AppCompatActivity implements
             } else {
                 if (value[0] == (byte) 0x57
                         && value[1] == readPublie[1]
-                        && value[2] == readPublie[2]) {
-                    Log.e(TAG, "接收到第" + packageDataIndex + "个数据");
+                        && value[2] == readPublie[2]
+                        && value[3] == readPublie[3]) {
+
                     //TODO 对BLEPublicSetting进行复制
                     if (packageDataIndex == 0) {
+                        Log.e("readData", "接收到公共协议数据，第" + packageDataIndex + "个数据接收成功");
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setGps(value[4]);
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setBluetoothStatus(value[5]);
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setSquelch1(value[6]);
@@ -523,27 +526,49 @@ public class BLE2Activity extends AppCompatActivity implements
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTotTimeOut(value[14]);
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setDisplayTime(value[15]);
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setPowerMode(value[16]);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updataPublic((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex));
-                            }
-                        });
                     } else {
-//                        ((BLEChannelSetting)bleChannelSettingHashMap.get(packageDataIndex)).
+                        Log.e("readData", "接收到频道协议数据，第" + packageDataIndex + "个数据接收成功");
+                        short de = (short) ((short) value[14] + (((short) (value[15]) << 8)));
+                        if (de > 0x2800) {
+                            double result = (de - 0x2800);
+                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode("D" + result / 10 + result % 10 + "N");
+                        } else {
+                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Decode(de / 10 + "." + de % 10);
+                        }
+                        de = (short) ((short) value[12] + (((short) (value[13]) << 8)));
+                        if (de > 0x2800) {
+                            double result = (de - 0x2800);
+                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode("D" + result / 10 + "." + result % 10 + "N");
+                        } else {
+                            ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setCtcss2Encode(de / 10 + "." + de % 10);
+                        }
+                        ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTransmitPower(value[16] % 2);
+                        ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setBandwidth(value[16] >> 1);
+                        ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setScan(value[17] >> 1);
                     }
+                    Log.e("readData", "通知下位机第" + packageDataIndex + "个数据包接收成功");
                     sendData(UUIDWRITE, (byte) 0x06);
                 } else if (value[0] == (byte) 0x06) {
-                    if (packageDataIndex <= 32) {
-                        ++packageDataIndex;
+                    Log.e("readData", "下位机知道了上位机第" + packageDataIndex + "个数据包接收成功");
+                    if (packageDataIndex < 32) {
+                        packageDataIndex = packageDataIndex + 1;
                         short address = (short) ((packageDataIndex - 1) * 16);
                         readPublie[1] = (byte) (address >> 8);
                         readPublie[2] = (byte) address;
+                        Log.e("readData", "开始请求第" + packageDataIndex + "个数据");
                         sendData(UUIDWRITE, readPublie);
                     } else {
+                        Log.e("readData", "请求结束。共请求了" + packageDataIndex + "个数据包");
                         packageDataIndex = 0;
-//                        sendData(UUIDWRITE, (byte) 0x45);
+                        sendData(UUIDWRITE, (byte) 0x45);
                         isDataWriting = false;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updataPublic((BLEPublicSetting) bleChannelSettingHashMap.get(0));
+                                updataChannel((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1));
+                            }
+                        });
                     }
 
                 }
@@ -691,7 +716,7 @@ public class BLE2Activity extends AppCompatActivity implements
         datas[14] = decodeCtcDcs[0];
         datas[15] = decodeCtcDcs[1];
         datas[16] = (byte) ((byte) bleChannelSetting.getTransmitPower() + (((byte) bleChannelSetting.getBandwidth()) << 1));
-        datas[17] = (byte) (((byte) bleChannelSetting.getBandwidth()) << 1);
+        datas[17] = (byte) (((byte) bleChannelSetting.getScan()) << 1);
         datas[18] = (byte) 0xFF;
         datas[19] = (byte) 0xFF;
         return datas;
@@ -791,5 +816,23 @@ public class BLE2Activity extends AppCompatActivity implements
         spTotTimeOut.setSelection(blePublicSetting.getTotTimeOut(), true);
         spDisplayTime.setSelection(blePublicSetting.getDisplayTime(), true);
         spPowerMode.setSelection(blePublicSetting.getPowerMode(), true);
+    }
+
+    private void updataChannel(BLEChannelSetting bleChannelSetting) {
+        spTransmitPower.setSelection(bleChannelSetting.getTransmitPower(), true);
+        spBandWidth.setSelection(bleChannelSetting.getBandwidth(), true);
+        spScan.setSelection(bleChannelSetting.getScan(), true);
+        spCtcss2Decode.setSelection(getIndex(bleChannelSetting.getCtcss2Decode()), true);
+        spCtcss2Encode.setSelection(getIndex(bleChannelSetting.getCtcss2Encode()), true);
+    }
+
+    private int getIndex(String value) {
+        String[] arrays = getResources().getStringArray(R.array.array_hz_ctcdcs);
+        for (int i = 0; i < arrays.length; i++) {
+            if (arrays[i].equals(value)) {
+                return i;
+            }
+        }
+        return 0;
     }
 }
