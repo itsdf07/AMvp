@@ -192,7 +192,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition())).setTx2Receive(s.toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setTx2Receive(s.toString());
             }
         });
         etCtcss2Send = findViewById(R.id.et_tx);
@@ -207,7 +207,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition())).setTx2Send(s.toString());
+                ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setTx2Send(s.toString());
             }
         });
 
@@ -528,6 +528,15 @@ public class BLE2Activity extends AppCompatActivity implements
                         ((BLEPublicSetting) bleChannelSettingHashMap.get(packageDataIndex)).setPowerMode(value[16]);
                     } else {
                         Log.e("readData", "接收到频道协议数据，第" + packageDataIndex + "个数据接收成功");
+                        int results = value[4] + (value[5] << 8) + (value[6] << 16) + (value[7] << 24);
+                        String rx = demical2Hex(results);
+                        String rxResult = rx.substring(0, 3) + "." + rx.substring(3);
+                        ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTx2Receive(rxResult);
+                        Log.e("rxResult", "rxResult:" + rxResult + "," + packageDataIndex);
+                        results = value[8] + (value[9] << 8) + (value[10] << 16) + (value[11] << 24);
+                        rx = demical2Hex(results);
+                        rxResult = rx.substring(0, 3) + "." + rx.substring(3);
+                        ((BLEChannelSetting) bleChannelSettingHashMap.get(packageDataIndex)).setTx2Send(rxResult);
                         short de = (short) ((short) value[14] + (((short) (value[15]) << 8)));
                         if (de > 0x2800) {
                             double result = (de - 0x2800);
@@ -819,6 +828,8 @@ public class BLE2Activity extends AppCompatActivity implements
     }
 
     private void updataChannel(BLEChannelSetting bleChannelSetting) {
+        etCtcss2Send.setText(bleChannelSetting.getTx2Send());
+        etCtcss2Accept.setText(bleChannelSetting.getTx2Receive());
         spTransmitPower.setSelection(bleChannelSetting.getTransmitPower(), true);
         spBandWidth.setSelection(bleChannelSetting.getBandwidth(), true);
         spScan.setSelection(bleChannelSetting.getScan(), true);
