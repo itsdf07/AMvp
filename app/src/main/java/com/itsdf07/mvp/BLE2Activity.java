@@ -647,6 +647,7 @@ public class BLE2Activity extends AppCompatActivity implements
                 ((BLEPublicSetting) bleChannelSettingHashMap.get(0)).setPowerMode(spPowerMode.getSelectedItemPosition());
                 break;
             case R.id.sp_xdxz:
+                updataChannel(((BLEChannelSetting) bleChannelSettingHashMap.get(position + 1)));
                 break;
             case R.id.sp_ctcss2Decode:
                 ((BLEChannelSetting) bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1)).setCtcss2Decode(spCtcss2Decode.getSelectedItem().toString());
