@@ -14,7 +14,7 @@ public class BLEPublicSetting {
     /**
      * 蓝牙开关:0-OFF,1-ON
      */
-    private int bluetoothStatus = 0;
+    private int bluetoothStatus = 1;
     /**
      * 静噪1:0~9
      */

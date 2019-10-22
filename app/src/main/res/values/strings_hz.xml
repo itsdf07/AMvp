@@ -170,12 +170,27 @@
         <item>14</item>
         <item>15</item>
         <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
+        <item>23</item>
+        <item>24</item>
+        <item>25</item>
+        <item>26</item>
+        <item>27</item>
+        <item>28</item>
+        <item>29</item>
+        <item>30</item>
+        <item>31</item>
+        <item>32</item>
     </string-array>
     <!--CTC/DCS 解密/编码-->
     <string-array name="array_hz_ctcdcs">
         <item>OFF</item>
         <item>67.0</item>
-        <item>69.3</item>
         <item>71.9</item>
         <item>74.4</item>
         <item>77.0</item>
@@ -200,38 +215,29 @@
         <item>146.2</item>
         <item>151.4</item>
         <item>156.7</item>
-        <item>159.8</item>
         <item>162.2</item>
-        <item>165.5</item>
         <item>167.9</item>
-        <item>171.3</item>
         <item>173.8</item>
-        <item>177.3</item>
         <item>179.9</item>
-        <item>183.5</item>
         <item>186.2</item>
-        <item>189.9</item>
         <item>192.8</item>
-        <item>196.6</item>
-        <item>199.5</item>
         <item>203.5</item>
-        <item>206.5</item>
         <item>210.7</item>
         <item>218.1</item>
         <item>225.7</item>
-        <item>229.1</item>
         <item>233.6</item>
         <item>241.8</item>
         <item>250.3</item>
-        <item>254.1</item>
         <item>D023N</item>
         <item>D025N</item>
         <item>D026N</item>
         <item>D031N</item>
         <item>D032N</item>
+        <item>D036N</item>
         <item>D043N</item>
         <item>D047N</item>
         <item>D051N</item>
+        <item>D053N</item>
         <item>D054N</item>
         <item>D065N</item>
         <item>D071N</item>
@@ -241,11 +247,13 @@
         <item>D114N</item>
         <item>D115N</item>
         <item>D116N</item>
+        <item>D122N</item>
         <item>D125N</item>
         <item>D131N</item>
         <item>D132N</item>
         <item>D134N</item>
         <item>D143N</item>
+        <item>D045N</item>
         <item>D152N</item>
         <item>D155N</item>
         <item>D156N</item>
@@ -254,23 +262,33 @@
         <item>D172N</item>
         <item>D174N</item>
         <item>D205N</item>
+        <item>D212N</item>
         <item>D223N</item>
+        <item>D225N</item>
         <item>D226N</item>
         <item>D243N</item>
         <item>D244N</item>
         <item>D245N</item>
+        <item>D246N</item>
         <item>D251N</item>
+        <item>D252N</item>
+        <item>D255N</item>
         <item>D261N</item>
         <item>D263N</item>
         <item>D265N</item>
+        <item>D266N</item>
         <item>D271N</item>
+        <item>D274N</item>
         <item>D306N</item>
         <item>D311N</item>
         <item>D315N</item>
+        <item>D325N</item>
         <item>D331N</item>
+        <item>D332N</item>
         <item>D343N</item>
         <item>D346N</item>
         <item>D351N</item>
+        <item>D356N</item>
         <item>D364N</item>
         <item>D365N</item>
         <item>D371N</item>
@@ -281,12 +299,19 @@
         <item>D431N</item>
         <item>D432N</item>
         <item>D445N</item>
+        <item>D446N</item>
+        <item>D452N</item>
+        <item>D454N</item>
+        <item>D455N</item>
+        <item>D462N</item>
         <item>D464N</item>
         <item>D465N</item>
         <item>D466N</item>
         <item>D503N</item>
         <item>D506N</item>
         <item>D516N</item>
+        <item>D523N</item>
+        <item>D526N</item>
         <item>D532N</item>
         <item>D546N</item>
         <item>D565N</item>

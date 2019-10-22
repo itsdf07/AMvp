@@ -195,7 +195,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTx2Receive(s.toString());
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setTx2Receive(s.toString());
             }
         });
         etCtcss2Send = findViewById(R.id.et_tx);
@@ -210,7 +210,7 @@ public class BLE2Activity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition() + 1).setTx2Send(s.toString());
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setTx2Send(s.toString());
             }
         });
 
@@ -261,8 +261,8 @@ public class BLE2Activity extends AppCompatActivity implements
         for (int i = 0; i < 32; i++) {
             BLEChannelSetting bleChannelSetting = new BLEChannelSetting();
             bleChannelSetting.setChannelNum(i + 1);
-            bleChannelSetting.setTx2Send("400.12500");
-            bleChannelSetting.setTx2Receive("400.12500");
+            bleChannelSetting.setTx2Send("400.22500");
+            bleChannelSetting.setTx2Receive("400.22500");
             bleChannelSetting.setCtcss2Decode("D023N");
             bleChannelSetting.setCtcss2Encode("67.0");
             bleChannelSetting.setTransmitPower(1);
@@ -323,8 +323,8 @@ public class BLE2Activity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_writeHz:
-                btnMhzWrite.setEnabled(false);
-                btnMhzRead.setEnabled(false);
+//                btnMhzWrite.setEnabled(false);
+//                btnMhzRead.setEnabled(false);
                 Toast.makeText(this, "正在写数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = true;
                 handshakeNum = 1;
@@ -332,8 +332,8 @@ public class BLE2Activity extends AppCompatActivity implements
                 sendData(UUIDWRITE, BLEMhzUtils.handshakeProtocolHead());
                 break;
             case R.id.btn_readHz:
-                btnMhzWrite.setEnabled(false);
-                btnMhzRead.setEnabled(false);
+//                btnMhzWrite.setEnabled(false);
+//                btnMhzRead.setEnabled(false);
                 Toast.makeText(this, "正在读取数据，请稍等", Toast.LENGTH_SHORT).show();
                 isDataWriting = false;
                 handshakeNum = 1;
@@ -444,6 +444,7 @@ public class BLE2Activity extends AppCompatActivity implements
                     handshakeNum = 0;
                     //TODO 开始发送第一个数据包:设置数据
                     ALog.e(TAG, "onReceivedValue->handshakeNum == 3:握手成功，可以开始发送公共协议数据了");
+                    blePublicSetting.setBluetoothStatus(1);
                     sendData(UUIDWRITE, getBLEPublicDataPackage(blePublicSetting));
                 }
             } else {
@@ -457,8 +458,8 @@ public class BLE2Activity extends AppCompatActivity implements
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                btnMhzWrite.setEnabled(true);
-                                btnMhzRead.setEnabled(true);
+//                                btnMhzWrite.setEnabled(true);
+//                                btnMhzRead.setEnabled(true);
                             }
                         });
                     } else {
@@ -583,7 +584,7 @@ public class BLE2Activity extends AppCompatActivity implements
                 bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Decode(spCtcss2Decode.getSelectedItem().toString());
                 break;
             case R.id.sp_ctcss2Encode:
-                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Decode(spCtcss2Encode.getSelectedItem().toString());
+                bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setCtcss2Encode(spCtcss2Encode.getSelectedItem().toString());
                 break;
             case R.id.sp_sacn:
                 bleChannelSettingHashMap.get(spXdxz.getSelectedItemPosition()).setScan(position);
@@ -679,10 +680,14 @@ public class BLE2Activity extends AppCompatActivity implements
                 Log.d(TAG, "信道频率有误,param:" + param);
                 return null;
             }
-            tx[0] = Byte.parseByte(param.substring(6, 8));
-            tx[1] = Byte.parseByte(param.substring(4, 6));
-            tx[2] = Byte.parseByte(param.substring(2, 4));
-            tx[3] = Byte.parseByte(param.substring(0, 2));
+            tx[0] = (byte) Integer.parseInt(param.substring(6, 8), 16);
+            tx[1] = (byte) Integer.parseInt(param.substring(4, 6), 16);
+            tx[2] = (byte) Integer.parseInt(param.substring(2, 4), 16);
+            tx[3] = (byte) Integer.parseInt(param.substring(0, 2), 16);
+//            tx[0] = (byte) 0xFF;
+//            tx[1] = 0x35;
+//            tx[2] = 0x22;
+//            tx[3] = 0x40;
             return tx;
         } catch (Exception e) {
             Log.e(TAG, "e:", e);
@@ -710,11 +715,11 @@ public class BLE2Activity extends AppCompatActivity implements
             dec[0] = (byte) decValue;
             dec[1] = (byte) (decValue >> 8);
         } else if (value.contains(".")) {
-            if (!(value + "").matches("[0-9]*")) {
-                dec[0] = (byte) 0xFF;
-                dec[1] = (byte) 0xFF;
-                return dec;
-            }
+//            if (!(value + "").matches("[0-9].")) {
+//                dec[0] = (byte) 0xFF;
+//                dec[1] = (byte) 0xFF;
+//                return dec;
+//            }
             short decValue = (short) (Double.valueOf(value) * 10);
             dec[0] = (byte) decValue;
             dec[1] = (byte) (decValue >> 8);
@@ -723,5 +728,20 @@ public class BLE2Activity extends AppCompatActivity implements
             dec[1] = (byte) 0xFF;
         }
         return dec;
+    }
+
+
+    /**
+     * 10进制转16进制
+     *
+     * @param demical 十进制值
+     * @return
+     */
+    public static String demical2Hex(int demical) {
+        if (!(demical + "").matches("[0-9]*")) {
+            return "";
+        }
+        String hexadecimal = Integer.toHexString(demical);
+        return hexadecimal;
     }
 }
