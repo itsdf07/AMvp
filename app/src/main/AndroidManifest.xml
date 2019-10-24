@@ -33,6 +33,7 @@
         <activity
             android:name=".BLE2Activity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name="com.itsdf07.bluetooth.ble.permission.PermissionUtils$PermissionActivity"/>
     </application>
 
 </manifest>
